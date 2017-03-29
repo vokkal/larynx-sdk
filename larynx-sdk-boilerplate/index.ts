@@ -2,37 +2,54 @@
 
 import * as sdk from "larynx-sdk";
 import {IFrame, ISessionContext} from "../larynx-sdk/lib/interfaces";
-import {PartialContext} from "../larynx-sdk/lib/mixinClasses";
+import * as fs from "fs";
 import {
     ActionResponseModel, Frames, LarynxEvent, LarynxEventHandler,
     FrameRedirectResponse
 } from "../larynx-sdk/src/interfaces";
 import {
     AlexaRequestBody, AlexaRequestType, AlexaResponseBody,
-    IntentRequest, LambdaContext, RequestType, SessionEndedRequest
+    IntentRequest, LambdaContext, RequestType, SessionEndedRequest, Response
 } from "../larynx-sdk/src/serviceDefinitions/Alexa";
 import {RedirectResponse} from "../larynx-sdk/src/index";
 
-class AlexaEventAdapter implements LarynxEvent {
+let pug = require("pug");
+let parser = require('xml2json');
+
+/**
+ * Transforms events from various services into a common format
+ * Name: intent name
+ * params: intent params
+ */
+class EventAdapter implements LarynxEvent {
     name: string;
     params: any;
 
-    constructor(name, params) {
+    constructor(name: any, params: any) {
         this.name = name;
         this.params = params;
     }
 }
 
-class AlexaEventHandler implements LarynxEventHandler {
+
+/**
+ * Transforms an Alexa request body into a common format for Larynx
+ */
+class AlexaRequestHandler implements LarynxEventHandler {
     constructor(event: AlexaRequestBody) {
         this.event = event;
         this.defaultFrame = {
-            name: "Introduction"
+            name: "redirect"
         };
         this.currentFrame = event.session.attributes["currentFrame"] || this.defaultFrame;
+
+        /**
+         * Tranform the event into common event names and params format
+         * @returns {EventAdapter}
+         */
         this.transform = function () {
-            let eventName;
-            let eventParams;
+            let eventName = "";
+            let eventParams = {};
             let eventType = this.event.request.type;
             if (eventType === RequestType.LaunchRequest) {
                 eventName = "LaunchRequest";
@@ -49,7 +66,7 @@ class AlexaEventHandler implements LarynxEventHandler {
                 };
             }
 
-            return new AlexaEventAdapter(eventName, eventParams);
+            return new EventAdapter(eventName, eventParams);
         };
     };
 
@@ -59,8 +76,11 @@ class AlexaEventHandler implements LarynxEventHandler {
     transform: () => LarynxEvent;
 }
 
-class AlexaResponseModel implements ActionResponseModel {
-    constructor(name, ssml) {
+/**
+ * Model that will be used for rendering responses.
+ */
+class ResponseModel implements ActionResponseModel {
+    constructor(name: any, ssml: any) {
         this.responseName = name;
         this.ssml = ssml;
     }
@@ -72,11 +92,17 @@ class AlexaResponseModel implements ActionResponseModel {
     };
 }
 
+/**
+ * Context options class. Will be passed as parameter for constructor of Event context
+ */
 class SessionContextOptions {
     stuff: string;
     attributes: any;
 }
 
+/**
+ * Defines attributes that will be available in each Frame
+ */
 class AlexaEventContext implements ISessionContext {
     stuff: string;
     attributes: any;
@@ -89,9 +115,13 @@ class AlexaEventContext implements ISessionContext {
     }
 }
 
+
+/**
+ * Register a basic frame. Has no intent handlers so will end the session. (TODO)
+ */
 sdk.registerFrame("Introduction", class extends AlexaEventContext implements IFrame {
 
-    constructor(options) {
+    constructor(options: any) {
         super(options);
     };
 
@@ -104,7 +134,7 @@ sdk.registerFrame("Introduction", class extends AlexaEventContext implements IFr
     };
 
     prompts = function () {
-        return new AlexaResponseModel("hello world", "<speak>Hello, " + this.stuff + "!</speak>");
+        return new ResponseModel("hello world", "<speak>Hello, " + this.stuff + "!</speak>");
     };
 
     post = function () {
@@ -120,28 +150,85 @@ sdk.registerFrame("Introduction", class extends AlexaEventContext implements IFr
     };
 });
 
+
+/**
+ * Empty frame to test redirect in pre-exec function. Use pre() to check for any preconditions needed for
+ * prompt handlers
+ */
+sdk.registerFrame("redirect", class extends AlexaEventContext implements IFrame {
+
+    constructor(options: any) {
+        super(options);
+    };
+
+    frameName: "redirect";
+
+    pre = function () {
+        return new Promise(resolve => {
+            resolve(new RedirectResponse(true, "Introduction"));
+        });
+    };
+
+    prompts = function () {
+        return new ResponseModel("hello world", "<speak>redirected...</speak>");
+    };
+
+    sessionEnded = function () {
+        return new Promise(resolve => {
+            resolve();
+        });
+    };
+});
+
 let larynx = sdk.initialize({});
 
-function LambdaHandler(event: any, context: LambdaContext, callback) {
+async function LambdaHandler(event: any, context: LambdaContext, callback: any) {
+
+    // Define attributes that will be available in each frame
     let options = new SessionContextOptions();
     options.attributes = event.session.attributes;
     options.stuff = "world";
 
+    // Build an Alexa event context
+    // Use a different event context builder for another service (e.g. Google)
     let eventContext = new AlexaEventContext({ContextOptions: options});
 
-    let eventHandler = new AlexaEventHandler(event);
+    // Build request handler
+    let requestHandler = new AlexaRequestHandler(event);
 
-    let larynxEvent = eventHandler.transform();
+    let larynxEvent = requestHandler.transform();
 
-    let currentFrame = larynx.Frames[eventHandler.currentFrame.name];
+    // Find the currently active frame or the default
+    let currentFrame = larynx.Frames[requestHandler.currentFrame.name];
 
-    sdk.LarynxEventHandler(larynxEvent, currentFrame, eventContext).then(response => {
-        console.log("Response: " + JSON.stringify(response, undefined, 4));
-    });
-};
+    try {
+        let responseData = await sdk.LarynxEventHandler(larynxEvent, currentFrame, eventContext);
 
+        let template = fs.readFileSync("./templates/alexa/response.pug");
 
-export const handler = LambdaHandler;
+        let rendered = pug.render(template, responseData);
+
+        let responseObj = JSON.parse(parser.toJson(rendered));
+
+        let r = new AlexaResponse();
+        r.response = responseObj.response;
+        r.sessionAttributes = options.attributes;
+        r.version = "1.0";
+
+        console.log("alexa response -> %j", r);
+
+    } catch (err) {
+        console.log("error: " + err)
+    }
+}
+
+class AlexaResponse implements AlexaResponseBody {
+    sessionAttributes: any[];
+    response: Response;
+    version: string;
+}
+
+// export const handler = LambdaHandler;
 
 
 let event = {
@@ -150,7 +237,7 @@ let event = {
         "application": {
             "applicationId": "amzn1.echo-sdk-ams.app.61df91bc-a5f9-4c5f-9436-91b5c5694ca4"
         },
-        "attributes": {},
+        "attributes": {"aval": "valll"},
         "user": {
             "userId": "amzn1.account.AFOQLP3TRKTIAN45J5LRLLELIVTQ"
         },

@@ -10,11 +10,10 @@
     "noImplicitAny": true,
     "removeComments": true,
     "rootDir": ".",
-    "lib": ["es2015", "es2015.promise", "dom"]
+    "lib": []
   },
   "include": [
-    "src/**/*.ts",
-    "tests/**/*.ts"
+    "index.ts"
   ],
   "exclude": [
     "node_modules"

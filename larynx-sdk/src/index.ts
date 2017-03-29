@@ -5,12 +5,13 @@ import Frames = larynx.Frames;
 import Actions = larynx.Actions;
 import ISessionContext = larynx.ISessionContext;
 import IFrame = larynx.IFrame;
+import * as util from "util";
 import {ActionResponseModel, CreatesFrame, FrameRedirectResponse, LarynxEvent} from "./interfaces";
 
 let _redirectLimit = 10;
 
-let _larynxFrames: {[key: string]: Array<CreatesFrame> } = {};
-let _larynxActions: {[key: string]: Actions; } = {};
+let _larynxFrames: {[key: string]: Array<CreatesFrame>} = {};
+let _larynxActions: {[key: string]: Actions} = {};
 
 
 export const initialize = function (options: any) {
@@ -32,9 +33,12 @@ export const LarynxEventHandler = async function (event: LarynxEvent, frame: Arr
 
     let frameImpl = new frame[Math.floor(Math.random() * frame.length)]({ContextOptions: options});
 
+    //console.log("frame: " + util.inspect(frameImpl));
     let redirect = true;
     let count = 0;
     let response = new RedirectResponse(false);
+
+    console.log("checking redirect...");
     while (redirect) {
         let response = await checkForRedirect(frameImpl);
 
@@ -51,10 +55,12 @@ export const LarynxEventHandler = async function (event: LarynxEvent, frame: Arr
             let newFrames = _larynxFrames[response.result.name];
             frameImpl = new newFrames[Math.floor(Math.random() * newFrames.length)]({ContextOptions: options});
             count++;
+        } else {
+            redirect = false;
         }
     }
 
-    return getResponseModel(frameImpl.prompts);
+    return getResponseModel.call(frameImpl, frameImpl.prompts);
 };
 
 async function getResponseModel(prompts: ActionResponseModel  | (() => Promise<ActionResponseModel> ) | (() => ActionResponseModel ) |
@@ -62,9 +68,9 @@ async function getResponseModel(prompts: ActionResponseModel  | (() => Promise<A
 
     if (prompts instanceof Array) {
         let prompt = prompts[Math.floor(Math.random() * prompts.length)];
-        return resolvePrompt(prompt);
+        return resolvePrompt.call(this, prompt);
     } else {
-        return resolvePrompt(prompts); // TODO: await here?
+        return resolvePrompt.call(this, prompts); // TODO: await here?
     }
 }
 
@@ -73,12 +79,12 @@ async function resolvePrompt(prompt: ActionResponseModel  | (() => Promise<Actio
         if (instanceOfActionResponseModel(prompt)) {
             return prompt;
         } else if (isPromise(prompt)) {
-            return await prompt();
+            return await prompt.call(this);
         } else if (isFunction(prompt)) {
-            return prompt();
+            return prompt.call(this);
         }
     } catch (err) {
-        throw new Error("Error resolving prompt!" + err);
+        throw new Error("Error resolving prompt! " + err);
     }
 }
 
@@ -95,7 +101,6 @@ function isPromise(func: any) {
 }
 
 async function checkForRedirect(frame: IFrame): Promise<FrameRedirectResponse> {
-
     if (frame.pre) {
         return await frame.pre();
     } else {
@@ -105,9 +110,15 @@ async function checkForRedirect(frame: IFrame): Promise<FrameRedirectResponse> {
 
 export class RedirectResponse implements FrameRedirectResponse {
     frameRedirect: boolean;
+    result: Frames;
 
-    constructor(redirected: boolean) {
+    constructor(redirected: boolean, redirectFrameName?: string) {
         this.frameRedirect = redirected;
+        if (redirectFrameName) {
+            this.result = {
+                name: redirectFrameName
+            };
+        }
     }
 }
 

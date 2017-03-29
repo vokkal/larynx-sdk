@@ -42,7 +42,7 @@ export interface AlexaRequestBody extends RequestBody {
  */
 export interface Session {
     /** A boolean value indicating whether this is a new session. Returns true for a new session or false for an existing session. */
-        new: boolean;
+        "new": boolean;
     /** A string that represents a unique identifier per a user’s active session. Note: A sessionId is consistent for multiple subsequent requests for a user and session. If the session ends for a user, then a new unique sessionId value is provided for subsequent requests for the same user. */
     sessionId: string;
     /** A map of key-value pairs. The attributes map is empty for requests where a new session has started with the attribute new set to true.
