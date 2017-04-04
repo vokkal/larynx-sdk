@@ -5,7 +5,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "noEmitOnError": true,
-    "target": "es6",
+    "target": "es5",
     "declaration": true,
     "noImplicitAny": true,
     "removeComments": true,
