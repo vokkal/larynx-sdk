@@ -5,7 +5,6 @@ import EventContainer = LarynxClasses.EventContainer;
 import IFrame = LarynxInterfaces.IFrame;
 import ISessionContext = LarynxInterfaces.ISessionContext;
 import {expect} from "chai";
-import {PartialContext} from "../src/mixinClasses";
 import Frames = LarynxInterfaces.Frames;
 
 class SessionContextOptions {
@@ -85,7 +84,16 @@ describe("obj", () => {
     });
 
     it("can check a frame identifier using a getter", () => {
-        class AFrameImpl extends PartialContext implements IFrame {
+        interface IMyContext extends AlexaEventContext {
+        }
+
+        class MyContext extends AlexaEventContext {
+            constructor(options: {ContextOptions: IMyContext}) {
+                super(options);
+            }
+        }
+
+        class AFrameImpl extends MyContext implements IFrame {
             frameName = "AFrameImpl";
             prompts = {responseName: "action response", responseFrame: {name: "AFrameImpl"}};
             sessionEnded = function () {
@@ -98,6 +106,7 @@ describe("obj", () => {
 
         class FrameContextOptions implements ISessionContext {
             stuff = "overwritten val";
+            attributes = {};
         }
 
         let aFrameImpl = new AFrameImpl({ContextOptions: new FrameContextOptions()});
@@ -106,7 +115,16 @@ describe("obj", () => {
     });
 
     it("can register a new frame", () => {
-        class AFrameImpl extends PartialContext implements IFrame {
+        interface IMyContext extends AlexaEventContext {
+        }
+
+        class MyContext extends AlexaEventContext {
+            constructor(options: {ContextOptions: IMyContext}) {
+                super(options);
+            }
+        }
+
+        class AFrameImpl extends MyContext implements IFrame {
             prompts = {responseName: "first value", responseFrame: {name: "aFrameImpl"}};
             sessionEnded = function () {
                 return new Promise(resolve => {
@@ -125,7 +143,16 @@ describe("obj", () => {
     });
 
     it("can register a duplicate frame name", () => {
-        class AFrameImpl extends PartialContext implements IFrame {
+        interface IMyContext extends AlexaEventContext {
+        }
+
+        class MyContext extends AlexaEventContext {
+            constructor(options: {ContextOptions: IMyContext}) {
+                super(options);
+            }
+        }
+
+        class AFrameImpl extends MyContext implements IFrame {
             prompts = {responseName: "second value", responseFrame: {name: "AFrameImpl"}};
             sessionEnded = function () {
                 return new Promise(resolve => {
@@ -145,11 +172,20 @@ describe("obj", () => {
     });
 
     it("can register duplicate frames with different values", () => {
+        interface IMyContext extends AlexaEventContext {
+        }
+
+        class MyContext extends AlexaEventContext {
+            constructor(options: {ContextOptions: IMyContext}) {
+                super(options);
+            }
+        }
+
         class FrameContextOptions implements ISessionContext {
             stuff = "overwritten val";
         }
 
-        let AFrameImpl = class extends PartialContext implements IFrame {
+        let AFrameImpl = class extends MyContext implements IFrame {
             prompts = {responseName: "third value", responseFrame: {name: "AFrameImpl"}};
             sessionEnded = function () {
                 return new Promise(resolve => {
