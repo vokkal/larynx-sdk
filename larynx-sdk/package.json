@@ -2,15 +2,17 @@
   "name": "larynx-sdk",
   "version": "2.0.0",
   "scripts": {
-    "test": "tslint -c tslint.json 'tests/**/*.ts' && mocha --opts tests/mocha.opts tests/**/*-test.ts",
-    "build": "rm -rf lib && tslint -c tslint.json 'src/**/*.ts' &&  tsc -p . && rm -fr lib/tests && mv lib/src/** lib/ && rm -fr lib/src",
-    "prepublish": "npm run build"
+    "test": "npm run build && npm run execute_tests",
+    "execute_tests": "npm run build && tslint -c tslint.json 'tests/**/*.ts' && mocha --opts tests/mocha.opts build/tests/**/*-test.js",
+    "build": "rm -rf build/ && tslint -c tslint.json 'src/**/*.ts' &&  tsc -p . ",
+    "clean": "rm -rf build/",
+    "prepublish": "npm run clean && npm run build && npm run test"
   },
-  "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
+  "main": "build/src/index.js",
+  "typings": "build/src/index.d.ts",
   "license": "SEE LICENSE IN License.txt",
   "files": [
-    "lib/"
+    "/"
   ],
   "devDependencies": {
     "@types/chai": "^3.4.35",

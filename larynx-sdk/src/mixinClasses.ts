@@ -8,14 +8,12 @@ import ISessionContext = larynx.ISessionContext;
 
 export class PartialIFrame implements IFrame {
     constructor(options: {FrameOptions: IFrame}) {
-        this.frameName = options.FrameOptions.frameName;
         this.pre = options.FrameOptions.pre;
         this.prompts = options.FrameOptions.prompts;
         this.transitions = options.FrameOptions.transitions;
         this.post = options.FrameOptions.post;
         this.sessionEnded = options.FrameOptions.sessionEnded;
     }
-    frameName: string;
     pre: () => Promise<FrameRedirectResponse>;
     prompts: ActionResponseModel  |
         (() => Promise<ActionResponseModel> ) |
@@ -27,12 +25,10 @@ export class PartialIFrame implements IFrame {
 }
 
 export class PartialContext implements ISessionContext {
-    stuff: string;
 
     // constructor can take a config object
     // the same object will be given to all mixins
     constructor(options: {ContextOptions: ISessionContext}) {
-        this.stuff = options.ContextOptions.stuff;
     }
 
     // add method stubs here,

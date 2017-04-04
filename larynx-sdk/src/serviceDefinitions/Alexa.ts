@@ -77,7 +77,7 @@ export interface AlexaRequest {
      * Type of concrete request.
      * @see AlexaRequestType
      * */
-        type: AlexaRequestType;
+    type: AlexaRequestType;
     /** Represents the unique identifier for the specific request. */
     requestId: string;
     /** Provides the date and time when Alexa sent the request. Use this to verify that the request is current and not part of a “replay” attack. Timestamp is provided as an ISO 8601 formatted string (for example, 2015-05-13T12:34:56Z). */

@@ -1,25 +1,45 @@
+import * as LarynxClasses from "../src/implementations";
+import * as sdk from "../src/index";
+import ActionResponseModel = LarynxInterfaces.ActionResponseModel;
+import EventContainer = LarynxClasses.EventContainer;
+import IFrame = LarynxInterfaces.IFrame;
+import ISessionContext = LarynxInterfaces.ISessionContext;
 import {expect} from "chai";
 import {PartialContext} from "../src/mixinClasses";
-import interfaces = require("../src/interfaces");
-import IFrame = interfaces.IFrame;
-import ISessionContext = interfaces.ISessionContext;
-import * as sdk from "../src/index";
-import ActionResponseModel = interfaces.ActionResponseModel;
+import Frames = LarynxInterfaces.Frames;
+
+class SessionContextOptions {
+    stuff: string;
+    attributes: any;
+}
+
+class AlexaEventContext implements ISessionContext {
+    stuff: string;
+    attributes: any;
+
+    // constructor can take a config object
+    // the same object will be given to all mixins
+    constructor(options: {ContextOptions: SessionContextOptions}) {
+        this.stuff = options.ContextOptions.stuff;
+        this.attributes = options.ContextOptions.attributes;
+    }
+}
 
 describe("obj", () => {
     it("can use context", () => {
-        class FrameContextOptions implements ISessionContext {
+        class FrameContextOptions extends SessionContextOptions {
             stuff = "overwritten val";
+            attributes = {};
         }
 
-        class AFrameImpl extends PartialContext implements IFrame {
-            frameName = "AFrameImpl";
-            prompts = {responseName: "action response"};
+        class AFrameImpl extends AlexaEventContext implements IFrame {
+            prompts = {responseName: "action response", responseFrame: {name: "AFrameImpl"}};
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
                 });
             };
+            frameTargets: Array<Frames>;
         }
 
         let b = new AFrameImpl({ContextOptions: new FrameContextOptions()});
@@ -28,16 +48,17 @@ describe("obj", () => {
     });
 
     it("can use custom context", () => {
-        interface IMyContext extends ISessionContext {
+        interface IMyContext extends AlexaEventContext {
             stuff2: string;
         }
 
         class FrameContextOptions implements IMyContext {
             stuff = "original context obj";
             stuff2 = "overwritten val 2";
+            attributes = {};
         }
 
-        class MyContext extends PartialContext {
+        class MyContext extends AlexaEventContext {
             constructor(options: {ContextOptions: IMyContext}) {
                 super(options);
                 this.stuff2 = options.ContextOptions.stuff2;
@@ -48,12 +69,13 @@ describe("obj", () => {
 
         class B extends MyContext implements IFrame {
             frameName = "AFrameImpl";
-            prompts = {responseName: "action response"};
+            prompts = {responseName: "action response", responseFrame: {name: "AFrameImpl"}};
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
                 });
             };
+            frameTargets: Array<Frames>;
         }
 
         let b = new B({ContextOptions: new FrameContextOptions()});
@@ -65,12 +87,13 @@ describe("obj", () => {
     it("can check a frame identifier using a getter", () => {
         class AFrameImpl extends PartialContext implements IFrame {
             frameName = "AFrameImpl";
-            prompts = {responseName: "action response"};
+            prompts = {responseName: "action response", responseFrame: {name: "AFrameImpl"}};
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
                 });
             };
+            frameTargets: Array<Frames>;
         }
 
         class FrameContextOptions implements ISessionContext {
@@ -84,8 +107,7 @@ describe("obj", () => {
 
     it("can register a new frame", () => {
         class AFrameImpl extends PartialContext implements IFrame {
-            frameName = "AFrameImpl";
-            prompts = {responseName: "first value"};
+            prompts = {responseName: "first value", responseFrame: {name: "aFrameImpl"}};
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
@@ -95,16 +117,16 @@ describe("obj", () => {
 
         let l = sdk.initialize({});
 
-        sdk.registerFrame("aFrameImpl", AFrameImpl);
+        let frameImpl = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
 
-        expect(l.Frames["aFrameImpl"][0]).any;
+        l.Register(frameImpl);
 
+        expect(l.Frames["aFrameImpl"].length).equal(1);
     });
 
     it("can register a duplicate frame name", () => {
         class AFrameImpl extends PartialContext implements IFrame {
-            frameName = "AFrameImpl";
-            prompts = {responseName: "second value"};
+            prompts = {responseName: "second value", responseFrame: {name: "AFrameImpl"}};
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
@@ -114,7 +136,9 @@ describe("obj", () => {
 
         let l = sdk.initialize({});
 
-        sdk.registerFrame("aFrameImpl", AFrameImpl);
+        let frameImpl = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
+
+        l.Register(frameImpl);
 
         expect(l.Frames["aFrameImpl"][1]).any;
 
@@ -126,13 +150,13 @@ describe("obj", () => {
         }
 
         let AFrameImpl = class extends PartialContext implements IFrame {
-            frameName = "AFrameImpl";
-            prompts = {responseName: "third value"};
+            prompts = {responseName: "third value", responseFrame: {name: "AFrameImpl"}};
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
                 });
             };
+            frameTargets: Array<Frames>;
         };
 
         let l = sdk.initialize({});
@@ -140,11 +164,11 @@ describe("obj", () => {
         let a0 = l.Frames["aFrameImpl"][0];
         let a1 = l.Frames["aFrameImpl"][1];
 
-        let A0 = new a0({ContextOptions: new FrameContextOptions()});
-        let A1 = new a1({ContextOptions: new FrameContextOptions()});
+        let A0 = new a0.impl({ContextOptions: new FrameContextOptions()});
+        let A1 = new a1.impl({ContextOptions: new FrameContextOptions()});
 
-        expect(A0.frameName).eq("AFrameImpl");
-        expect(A1.frameName).eq("AFrameImpl");
+        expect(a0.frameId.name).eq("aFrameImpl");
+        expect(a1.frameId.name).eq("aFrameImpl");
 
         expect((A0.prompts as ActionResponseModel).responseName).eq("first value");
         expect((A1.prompts as ActionResponseModel).responseName).eq("second value");
