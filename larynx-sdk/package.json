@@ -3,10 +3,10 @@
   "version": "2.0.0",
   "scripts": {
     "test": "npm run build && npm run execute_tests",
-    "execute_tests": "npm run build && tslint -c tslint.json 'tests/**/*.ts' && mocha --opts tests/mocha.opts build/tests/**/*-test.js",
-    "build": "rm -rf build/ && tslint -c tslint.json 'src/**/*.ts' &&  tsc -p . ",
+    "execute_tests": "tslint -c tslint.json 'tests/**/*.ts' && npm run build && mocha --opts tests/mocha.opts build/tests/**/*-test.js",
+    "build": "tslint -c tslint.json 'src/**/*.ts' && rm -rf build/ && tsc -p . ",
     "clean": "rm -rf build/",
-    "prepublish": "npm run clean && npm run build && npm run test"
+    "prepublish": "npm run clean && npm run build && npm run execute_tests"
   },
   "main": "build/src/index.js",
   "typings": "build/src/index.d.ts",
