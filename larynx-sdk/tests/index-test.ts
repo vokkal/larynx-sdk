@@ -12,7 +12,7 @@ class SessionContextOptions {
     attributes: any;
 }
 
-class AlexaEventContext implements ISessionContext {
+class LarynxEventOptions implements ISessionContext {
     stuff: string;
     attributes: any;
 
@@ -31,7 +31,7 @@ describe("obj", () => {
             attributes = {};
         }
 
-        class AFrameImpl extends AlexaEventContext implements IFrame {
+        class AFrameImpl extends LarynxEventOptions implements IFrame {
             prompts = {responseName: "action response", responseFrame: {name: "AFrameImpl"}};
             sessionEnded = function () {
                 return new Promise(resolve => {
@@ -47,7 +47,7 @@ describe("obj", () => {
     });
 
     it("can use custom context", () => {
-        interface IMyContext extends AlexaEventContext {
+        interface IMyContext extends LarynxEventOptions {
             stuff2: string;
         }
 
@@ -57,7 +57,7 @@ describe("obj", () => {
             attributes = {};
         }
 
-        class MyContext extends AlexaEventContext {
+        class MyContext extends LarynxEventOptions {
             constructor(options: {ContextOptions: IMyContext}) {
                 super(options);
                 this.stuff2 = options.ContextOptions.stuff2;
@@ -84,10 +84,10 @@ describe("obj", () => {
     });
 
     it("can check a frame identifier using a getter", () => {
-        interface IMyContext extends AlexaEventContext {
+        interface IMyContext extends LarynxEventOptions {
         }
 
-        class MyContext extends AlexaEventContext {
+        class MyContext extends LarynxEventOptions {
             constructor(options: {ContextOptions: IMyContext}) {
                 super(options);
             }
@@ -115,10 +115,10 @@ describe("obj", () => {
     });
 
     it("can register a new frame", () => {
-        interface IMyContext extends AlexaEventContext {
+        interface IMyContext extends LarynxEventOptions {
         }
 
-        class MyContext extends AlexaEventContext {
+        class MyContext extends LarynxEventOptions {
             constructor(options: {ContextOptions: IMyContext}) {
                 super(options);
             }
@@ -143,10 +143,10 @@ describe("obj", () => {
     });
 
     it("can register a duplicate frame name", () => {
-        interface IMyContext extends AlexaEventContext {
+        interface IMyContext extends LarynxEventOptions {
         }
 
-        class MyContext extends AlexaEventContext {
+        class MyContext extends LarynxEventOptions {
             constructor(options: {ContextOptions: IMyContext}) {
                 super(options);
             }
@@ -172,10 +172,10 @@ describe("obj", () => {
     });
 
     it("can register duplicate frames with different values", () => {
-        interface IMyContext extends AlexaEventContext {
+        interface IMyContext extends LarynxEventOptions {
         }
 
-        class MyContext extends AlexaEventContext {
+        class MyContext extends LarynxEventOptions {
             constructor(options: {ContextOptions: IMyContext}) {
                 super(options);
             }
@@ -186,27 +186,46 @@ describe("obj", () => {
         }
 
         let AFrameImpl = class extends MyContext implements IFrame {
-            prompts = {responseName: "third value", responseFrame: {name: "AFrameImpl"}};
+            prompts = function () {
+                return {
+                    responseName: "third value",
+                    responseFrame: {name: "AFrameImpl"},
+                    newVal: this.stuff
+                };
+            };
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
                 });
             };
-            frameTargets: Array<Frames>;
         };
 
         let l = sdk.initialize({});
 
+        let frameImpl = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
+
+        l.Register(frameImpl);
+
         let a0 = l.Frames["aFrameImpl"][0];
         let a1 = l.Frames["aFrameImpl"][1];
+        let a2 = l.Frames["aFrameImpl"][2];
 
         let A0 = new a0.impl({ContextOptions: new FrameContextOptions()});
         let A1 = new a1.impl({ContextOptions: new FrameContextOptions()});
+        let A2 = new a2.impl({ContextOptions: new FrameContextOptions()});
 
         expect(a0.frameId.name).eq("aFrameImpl");
         expect(a1.frameId.name).eq("aFrameImpl");
+        expect(a2.frameId.name).eq("aFrameImpl");
+
+        class ExtendedResponse implements ActionResponseModel {
+            responseName: string;
+            responseFrame: Frames;
+            newVal: string;
+        }
 
         expect((A0.prompts as ActionResponseModel).responseName).eq("first value");
         expect((A1.prompts as ActionResponseModel).responseName).eq("second value");
+        expect((A2.prompts as () => ExtendedResponse)().newVal).eq("overwritten val");
     });
 });
