@@ -1,19 +1,17 @@
 /// <reference path="../node_modules/typescript/lib/lib.es6.d.ts" />
-
-import * as util from "util";
 import * as LarynxClasses from "./implementations";
-import * as LarynxInterfaces from "./interfaces";
+import * as LarynxInterfaces from "./definitions/interfaces";
 
-import CreatesFrame = LarynxInterfaces.CreatesFrame;
 import Actions = LarynxInterfaces.Actions;
-import LarynxEvent = LarynxInterfaces.LarynxEvent;
-import Frames = LarynxInterfaces.Frames;
-import ISessionContext = LarynxInterfaces.ISessionContext;
 import ActionResponseModel = LarynxInterfaces.ActionResponseModel;
-import FrameRedirectResponse = LarynxInterfaces.FrameRedirectResponse;
-import IFrame = LarynxInterfaces.IFrame;
+import CreatesFrame = LarynxInterfaces.CreatesFrame;
 import EventContainer = LarynxClasses.EventContainer;
+import FrameRedirectResponse = LarynxInterfaces.FrameRedirectResponse;
+import Frames = LarynxInterfaces.Frames;
 import IEventContainer = LarynxInterfaces.IEventContainer;
+import IFrame = LarynxInterfaces.IFrame;
+import ISessionContext = LarynxInterfaces.ISessionContext;
+import LarynxEvent = LarynxInterfaces.LarynxEvent;
 
 let _redirectLimit = 10;
 
@@ -40,10 +38,10 @@ function register(frame: IEventContainer): void {
 
 export const LarynxEventHandler = async function (event: LarynxEvent, frameId: Frames, options: ISessionContext): Promise<ActionResponseModel> {
 
-    let frame = _larynxFrames[frameId.name];
-    let frameImpl = new frame[Math.floor(Math.random() * frame.length)].impl({ContextOptions: options});
+    let frameArr = _larynxFrames[frameId.name];
+    let frameContainer = frameArr[Math.floor(Math.random() * frameArr.length)];
+    let frameImpl = new frameContainer.impl({ContextOptions: options});
 
-    // console.log("frame: " + util.inspect(frameImpl));
     let redirect = true;
     let count = 0;
     let response = new RedirectResponse(false);

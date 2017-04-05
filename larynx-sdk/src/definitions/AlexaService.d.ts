@@ -1,4 +1,4 @@
-import {AlexaRequestType, SessionEndedReason, OutputSpeechType, CardType} from "./Alexa";
+import {AlexaRequestType, CardType, OutputSpeechType, SessionEndedReason} from "./Alexa";
 /**
  * Alexa Skills Kit TypeScript definitions built from
  * [Alexa Skills Kit Interface Reference](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/alexa-skills-kit-interface-reference).

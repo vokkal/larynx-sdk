@@ -1,4 +1,4 @@
-import * as LarynxInterfaces from "./interfaces";
+import * as LarynxInterfaces from "./definitions/interfaces";
 namespace LarynxClasses {
     import IEventContainer = LarynxInterfaces.IEventContainer;
     import Frames = LarynxInterfaces.Frames;
