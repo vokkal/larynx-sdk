@@ -158,8 +158,13 @@ describe("obj", () => {
             }
         }
 
+        class FrameContextOptions implements IMyContext {
+            stuff = "overwritten val";
+            attributes = {};
+        }
+
         class AFrameImpl extends MyContext implements IFrame {
-            prompts = {responseName: "second value", responseFrame: {name: "AFrameImpl"}};
+            prompts = {responseName: "the value", responseFrame: {name: "AFrameImpl"}};
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
@@ -170,10 +175,19 @@ describe("obj", () => {
         let l = sdk.initialize({});
 
         let frameImpl = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
+        let frameImpl2 = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
 
         l.Register(frameImpl);
+        l.Register(frameImpl2);
 
-        expect(l.Frames["aFrameImpl"][1]).any;
+        expect(l.Frames["aFrameImpl"][1]);
+
+        let a = l.Frames["aFrameImpl"][0];
+
+        let A = new a.impl({ContextOptions: new FrameContextOptions()});
+
+        expect(a.frameId.name).eq("aFrameImpl");
+        expect((A.prompts as ActionResponseModel).responseName).eq("the value");
 
     });
 
@@ -187,8 +201,9 @@ describe("obj", () => {
             }
         }
 
-        class FrameContextOptions implements ISessionContext {
+        class FrameContextOptions implements IMyContext {
             stuff = "overwritten val";
+            attributes = {};
         }
 
         let AFrameImpl = class extends MyContext implements IFrame {
