@@ -15,6 +15,9 @@ import LarynxEvent = LarynxInterfaces.LarynxEvent;
 import RedirectResponse = CommonClasses.RedirectResponse;
 import LarynxEventHandler = LarynxInterfaces.LarynxEventHandler;
 
+let pug = require("pug");
+let parser = require("xml2json");
+
 let _redirectLimit = 10;
 
 export const initialize = function (options: any) {
@@ -30,6 +33,9 @@ export const initialize = function (options: any) {
             } else {
                 _larynxFrames[frame.frameId.name].push(frame);
             }
+        },
+        Render: function (template: string, model: ActionResponseModel): any {
+            return JSON.parse(parser.toJson(pug.render(template, model)));
         },
         HandleEvent: async function (eventHandler: LarynxEventHandler, options: ISessionContext): Promise<ActionResponseModel> {
             let frameId = eventHandler.currentFrame;

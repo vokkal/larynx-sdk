@@ -4,3 +4,4 @@ typings
 build
 dist
 npm-debug.log
+.idea/
