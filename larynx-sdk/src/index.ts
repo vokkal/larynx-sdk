@@ -1,6 +1,6 @@
 /// <reference path="../node_modules/typescript/lib/lib.es6.d.ts" />
 import * as LarynxClasses from "./platforms/implementations";
-import * as LarynxInterfaces from "./definitions/interfaces";
+import * as CommonClasses from "./platforms/common/common";
 
 import Actions = LarynxInterfaces.Actions;
 import ActionResponseModel = LarynxInterfaces.ActionResponseModel;
@@ -12,66 +12,67 @@ import IEventContainer = LarynxInterfaces.IEventContainer;
 import IFrame = LarynxInterfaces.IFrame;
 import ISessionContext = LarynxInterfaces.ISessionContext;
 import LarynxEvent = LarynxInterfaces.LarynxEvent;
+import RedirectResponse = CommonClasses.RedirectResponse;
+import LarynxEventHandler = LarynxInterfaces.LarynxEventHandler;
 
 let _redirectLimit = 10;
 
-let _larynxFrames: {[key: string]: Array<IEventContainer>} = {};
-let _larynxActions: {[key: string]: Actions} = {};
-
-
 export const initialize = function (options: any) {
+    let _larynxFrames: {[key: string]: Array<IEventContainer>} = {};
+    let _larynxActions: {[key: string]: Actions} = {};
 
     return {
         Frames: _larynxFrames,
         Actions: _larynxActions,
-        Register: register
+        Register: function (frame: IEventContainer): void {
+            if (!_larynxFrames[frame.frameId.name]) {
+                _larynxFrames[frame.frameId.name] = [frame];
+            } else {
+                _larynxFrames[frame.frameId.name].push(frame);
+            }
+        },
+        HandleEvent: async function (eventHandler: LarynxEventHandler, options: ISessionContext): Promise<ActionResponseModel> {
+            let frameId = eventHandler.currentFrame;
+            let frameIndex = eventHandler.currentFrameIndex;
+
+            let frameArr = _larynxFrames[frameId.name];
+            let frameContainer = frameArr[frameIndex ? frameIndex : (Math.floor(Math.random() * frameArr.length))];
+            let frameImpl = new frameContainer.impl({ContextOptions: options});
+
+            let redirect = true;
+            let count = 0;
+            let response = new RedirectResponse(false);
+
+            console.log("checking redirect...");
+            while (redirect) {
+                let response = await checkForRedirect.call(frameImpl, frameImpl);
+
+                if (response.err) {
+                    console.log(`Redirect error: ${response.err}, ${response.err.message}`);
+                    throw response.err;
+                } else if (count >= _redirectLimit) {
+                    console.log(`Redirect error: too many redirects`);
+                    throw new Error("Too many redirects! Check for loops!");
+                }
+
+                if (response.frameRedirect) {
+                    console.log("Redirection! => " + response.result.name);
+                    let newFrames = _larynxFrames[response.result.name];
+                    frameIndex = Math.floor(Math.random() * newFrames.length);
+                    frameImpl = new newFrames[frameIndex].impl({ContextOptions: options});
+                    frameId = response.result;
+                    count++;
+                } else {
+                    redirect = false;
+                }
+            }
+
+            let responseModel = await getResponseModel.call(frameImpl, frameImpl.prompts);
+            responseModel.responseFrame = frameId;
+            responseModel.responseFrameIndex = frameIndex;
+            return responseModel;
+        }
     };
-};
-
-function register(frame: IEventContainer): void {
-    if (!_larynxFrames[frame.frameId.name]) {
-        _larynxFrames[frame.frameId.name] = [frame];
-    } else {
-        _larynxFrames[frame.frameId.name].push(frame);
-    }
-}
-
-export const LarynxEventHandler = async function (event: LarynxEvent, frameId: Frames, options: ISessionContext): Promise<ActionResponseModel> {
-
-    let frameArr = _larynxFrames[frameId.name];
-    let frameContainer = frameArr[Math.floor(Math.random() * frameArr.length)];
-    let frameImpl = new frameContainer.impl({ContextOptions: options});
-
-    let redirect = true;
-    let count = 0;
-    let response = new RedirectResponse(false);
-
-    console.log("checking redirect...");
-    while (redirect) {
-        let response = await checkForRedirect.call(frameImpl, frameImpl);
-
-        if (response.err) {
-            console.log(`Redirect error: ${response.err}, ${response.err.message}`);
-            throw response.err;
-        } else if (count >= _redirectLimit) {
-            console.log(`Redirect error: too many redirects`);
-            throw new Error("Too many redirects! Check for loops!");
-        }
-
-        if (response.frameRedirect) {
-            console.log("Redirection! => " + response.result.name);
-            let newFrames = _larynxFrames[response.result.name];
-            frameImpl = new newFrames[Math.floor(Math.random() * newFrames.length)].impl({ContextOptions: options});
-
-            count++;
-        } else {
-            redirect = false;
-        }
-    }
-
-    let responseModel = await getResponseModel.call(frameImpl, frameImpl.prompts);
-    responseModel.responseFrame = frameId.name;
-    return responseModel;
 };
 
 async function getResponseModel(prompts: ActionResponseModel  | (() => Promise<ActionResponseModel> ) | (() => ActionResponseModel ) |
@@ -116,20 +117,6 @@ async function checkForRedirect(frame: IFrame): Promise<FrameRedirectResponse> {
         return await frame.pre.call(this);
     } else {
         return new RedirectResponse(false);
-    }
-}
-
-export class RedirectResponse implements FrameRedirectResponse {
-    frameRedirect: boolean;
-    result: Frames;
-
-    constructor(redirected: boolean, redirectFrameName?: string) {
-        this.frameRedirect = redirected;
-        if (redirectFrameName) {
-            this.result = {
-                name: redirectFrameName
-            };
-        }
     }
 }
 

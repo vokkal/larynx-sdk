@@ -1,11 +1,18 @@
+import * as AlexaClasses from "../src/platforms/alexa/Alexa";
+import * as CommonClasses from "../src/platforms/common/common";
 import * as LarynxClasses from "../src/platforms/implementations";
 import * as sdk from "../src/index";
 import ActionResponseModel = LarynxInterfaces.ActionResponseModel;
+import AlexaRequestAdapter = AlexaClasses.AlexaRequestAdapter;
+import AlexaRequestBody = Alexa.AlexaRequestBody;
 import EventContainer = LarynxClasses.EventContainer;
+import Frames = LarynxInterfaces.Frames;
 import IFrame = LarynxInterfaces.IFrame;
 import ISessionContext = LarynxInterfaces.ISessionContext;
+import RedirectResponse = CommonClasses.RedirectResponse;
+import TemplateResponseModel = CommonClasses.TemplateResponseModel;
 import {expect} from "chai";
-import Frames = LarynxInterfaces.Frames;
+import {error} from "util";
 
 class SessionContextOptions {
     stuff: string;
@@ -188,7 +195,22 @@ describe("obj", () => {
         let AFrameImpl = class extends MyContext implements IFrame {
             prompts = function () {
                 return {
-                    responseName: "third value",
+                    responseName: "first value",
+                    responseFrame: {name: "AFrameImpl"},
+                    newVal: this.stuff
+                };
+            };
+            sessionEnded = function () {
+                return new Promise(resolve => {
+                    resolve();
+                });
+            };
+        };
+
+        let BFrameImpl = class extends MyContext implements IFrame {
+            prompts = function () {
+                return {
+                    responseName: "second value",
                     responseFrame: {name: "AFrameImpl"},
                     newVal: this.stuff
                 };
@@ -203,20 +225,19 @@ describe("obj", () => {
         let l = sdk.initialize({});
 
         let frameImpl = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
+        let frameImpl2 = new EventContainer({name: "aFrameImpl"}, BFrameImpl, []);
 
         l.Register(frameImpl);
+        l.Register(frameImpl2);
 
         let a0 = l.Frames["aFrameImpl"][0];
         let a1 = l.Frames["aFrameImpl"][1];
-        let a2 = l.Frames["aFrameImpl"][2];
 
         let A0 = new a0.impl({ContextOptions: new FrameContextOptions()});
         let A1 = new a1.impl({ContextOptions: new FrameContextOptions()});
-        let A2 = new a2.impl({ContextOptions: new FrameContextOptions()});
 
         expect(a0.frameId.name).eq("aFrameImpl");
         expect(a1.frameId.name).eq("aFrameImpl");
-        expect(a2.frameId.name).eq("aFrameImpl");
 
         class ExtendedResponse implements ActionResponseModel {
             responseName: string;
@@ -224,8 +245,127 @@ describe("obj", () => {
             newVal: string;
         }
 
-        expect((A0.prompts as ActionResponseModel).responseName).eq("first value");
-        expect((A1.prompts as ActionResponseModel).responseName).eq("second value");
-        expect((A2.prompts as () => ExtendedResponse)().newVal).eq("overwritten val");
+        expect((A0.prompts as () => ExtendedResponse)().responseName).eq("first value");
+        expect((A1.prompts as () => ExtendedResponse)().responseName).eq("second value");
+        expect((A1.prompts as () => ExtendedResponse)().newVal).eq("overwritten val");
+    });
+
+    it("can redirect from one frame to another", (done) => {
+        interface IMyContext extends LarynxEventOptions {
+        }
+
+        class MyContext implements IMyContext {
+            stuff: string;
+            attributes: any;
+
+            constructor(options: {ContextOptions: IMyContext}) {
+                this.stuff = options.ContextOptions.stuff;
+                this.attributes = options.ContextOptions.attributes;
+            }
+        }
+
+        let AFrameImpl = class extends MyContext implements IFrame {
+            pre = function () {
+                return new Promise(resolve => {
+                    resolve(new RedirectResponse(true, "BFrame"));
+                });
+            };
+            sessionEnded = function () {
+                return new Promise(resolve => {
+                    resolve();
+                });
+            };
+        };
+
+        let BFrameImpl = class extends MyContext implements IFrame {
+            pre = function () {
+                return new Promise(resolve => {
+                    resolve(new RedirectResponse(false));
+                });
+            };
+            prompts = function () {
+                return new TemplateResponseModel("hello world", "<speak>Hello, " + this.stuff + "!</speak>");
+            };
+            sessionEnded = function () {
+                return new Promise(resolve => {
+                    resolve();
+                });
+            };
+        };
+
+        let l = sdk.initialize({});
+
+        let AFrameContainer = new EventContainer({name: "AFrame"}, AFrameImpl, [{name: "BFrame"}]);
+        let BFrameContainer = new EventContainer({name: "BFrame"}, BFrameImpl, []);
+
+        l.Register(AFrameContainer);
+        l.Register(BFrameContainer);
+
+        let requestAdapter = new AlexaRequestAdapter(AlexaLaunchRequest, {name: "AFrame"});
+
+        let frameOptions: IMyContext = {
+            stuff: "mocha",
+            attributes: AlexaLaunchRequest.session.attributes
+        };
+
+        let eventContext = new MyContext({ContextOptions: frameOptions});
+
+        l.HandleEvent(requestAdapter, eventContext).then(responseModel => {
+            expect(responseModel.responseFrame.name).eq("BFrame");
+            expect(responseModel.responseFrameIndex).eq(0);
+            let templateModel = responseModel as TemplateResponseModel;
+            expect(templateModel.ssml).eq("<speak>Hello, mocha!</speak>");
+            done();
+        }).catch(error => {
+            console.log(error + error.message);
+            expect(error).equal(undefined);
+            done();
+        });
     });
 });
+
+let AlexaLaunchRequest: AlexaRequestBody = {
+    version: "1.0",
+    session: {
+        "new": false,
+        sessionId: "LarynxMochaTestSessionId",
+        attributes: {},
+        application: {
+            applicationId: "LarynxMochaTestAppId"
+        },
+        user: {
+            userId: "LarynxMochaTestUserId"
+        }
+    },
+    context: {
+        System: {
+            application: {
+                applicationId: "LarynxMochaTestAppId"
+            },
+            user: {
+                userId: "LarynxMochaTestUserId",
+                permissions: {
+                    consentToken: "LarynxMochaTestConsentToken"
+                },
+                accessToken: "LarynxMochaTestAccessToken"
+            },
+            device: {
+                deviceId: "LarynxMochaTestDeviceId",
+                supportedInterfaces: {
+                    AudioPlayer: {}
+                }
+            }
+        },
+        AudioPlayer: {
+            token: "LarynxMochaTestAudioPlayerToken",
+            offsetInMilliseconds: 0,
+            playerActivity: ""
+        },
+    },
+    request: {
+        type: "LaunchRequest",
+        requestId: "LarynxMochaTestRequestId",
+        timestamp: "" + new Date().getTime(),
+        locale: "EN_US",
+    }
+};

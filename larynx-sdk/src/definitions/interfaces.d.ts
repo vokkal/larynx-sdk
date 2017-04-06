@@ -17,8 +17,9 @@ declare namespace LarynxInterfaces {
         currentFrame: Frames;
         currentFrameIndex: number;
         defaultFrame: Frames;
-        transform: () => LarynxEvent |
-            (() => Promise<LarynxEvent>);
+        transform: (event: RequestBody) => LarynxEvent |
+            ((event: RequestBody) => Promise<LarynxEvent>);
+        event: LarynxEvent;
     }
 
     export interface RequestBody {
@@ -28,6 +29,7 @@ declare namespace LarynxInterfaces {
         frameRedirect: boolean;
         err?: Error;
         result?: Frames;
+        index?: number;
     }
 
     export interface NamedAction {

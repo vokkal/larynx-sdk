@@ -75,7 +75,7 @@ declare namespace Alexa {
      */
     export interface Session {
         /** A boolean value indicating whether this is a new session. Returns true for a new session or false for an existing session. */
-            "new": boolean;
+        "new": boolean;
         /** A string that represents a unique identifier per a user’s active session. Note: A sessionId is consistent for multiple subsequent requests for a user and session. If the session ends for a user, then a new unique sessionId value is provided for subsequent requests for the same user. */
         sessionId: string;
         /** A map of key-value pairs. The attributes map is empty for requests where a new session has started with the attribute new set to true.
@@ -84,7 +84,9 @@ declare namespace Alexa {
          */
         attributes: any;
         /** An object containing an application ID. This is used to verify that the request was intended for your service. */
-        application: any;
+        application: {
+            applicationId: string;
+        };
         /**
          * An object that describes the user making the request.
          * @see User
@@ -143,7 +145,7 @@ declare namespace Alexa {
          * Type of concrete request.
          * @see AlexaRequestType
          * */
-            type: AlexaRequestType;
+        type: AlexaRequestType;
         /** Represents the unique identifier for the specific request. */
         requestId: string;
         /** Provides the date and time when Alexa sent the request. Use this to verify that the request is current and not part of a “replay” attack. Timestamp is provided as an ISO 8601 formatted string (for example, 2015-05-13T12:34:56Z). */
