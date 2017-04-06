@@ -15,6 +15,7 @@ declare namespace LarynxInterfaces {
 
     export interface LarynxEventHandler {
         currentFrame: Frames;
+        currentFrameIndex: number;
         defaultFrame: Frames;
         transform: () => LarynxEvent |
             (() => Promise<LarynxEvent>);
@@ -46,6 +47,7 @@ declare namespace LarynxInterfaces {
         isActive?: boolean | Promise<boolean>; // check if this model can be rendered in the current context
         responseName: string;
         responseFrame: Frames;
+        responseFrameIndex?: number;
     }
 
     export interface ActionHandlers {

@@ -1,5 +1,5 @@
 /// <reference path="../node_modules/typescript/lib/lib.es6.d.ts" />
-import * as LarynxClasses from "./implementations";
+import * as LarynxClasses from "./platforms/implementations";
 import * as LarynxInterfaces from "./definitions/interfaces";
 
 import Actions = LarynxInterfaces.Actions;

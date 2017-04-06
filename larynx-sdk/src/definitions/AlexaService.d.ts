@@ -387,3 +387,4 @@ declare namespace Alexa {
 }
 
 export = Alexa;
+export as namespace Alexa;

@@ -1,4 +1,4 @@
-import * as LarynxClasses from "../src/implementations";
+import * as LarynxClasses from "../src/platforms/implementations";
 import * as sdk from "../src/index";
 import ActionResponseModel = LarynxInterfaces.ActionResponseModel;
 import EventContainer = LarynxClasses.EventContainer;
