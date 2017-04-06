@@ -5,14 +5,14 @@
     "test": "npm run build && npm run execute_tests",
     "execute_tests": "tslint -c tslint.json 'tests/**/*.ts' && npm run build && mocha --opts tests/mocha.opts build/tests/**/*-test.js",
     "build": "tslint -c tslint.json 'src/**/*.ts' && rm -rf build/ && tsc -p . ",
-    "clean": "rm -rf build/",
-    "prepublish": "npm run clean && npm run build && npm run execute_tests"
+    "clean": "rm -rf build/ && rm -rf dist/",
+    "prepublish": "npm run clean && npm run build && npm run execute_tests && webpack && rm -rf build/"
   },
-  "main": "build/src/index.js",
-  "typings": "build/src/index.d.ts",
+  "main": "dist/larynx.min.js",
+  "typings": "dist/larynx.min.d.ts",
   "license": "SEE LICENSE IN License.txt",
   "files": [
-    "/"
+    "/dist"
   ],
   "devDependencies": {
     "@types/chai": "^3.4.35",
@@ -20,12 +20,17 @@
     "@types/node": "^7.0.11",
     "@types/pug": "^2.0.4",
     "chai": "^3.5.0",
+    "dts-bundle": "^0.7.2",
+    "dtsbundler-webpack-plugin": "^1.0.0",
     "mocha": "^3.1.0",
     "mocha-clean": "^1.0.0",
+    "source-map-loader": "^0.2.1",
+    "ts-loader": "^2.0.3",
     "ts-node": "^1.3.0",
     "tslint": "^4.5.1",
     "typescript": "^2.2.2",
-    "typings": "^2.1.0"
+    "typings": "^2.1.0",
+    "webpack": "^2.3.3"
   },
   "dependencies": {
     "pug": "^2.0.0-beta11",
