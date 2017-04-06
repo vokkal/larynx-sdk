@@ -311,15 +311,89 @@ describe("obj", () => {
         let eventContext = new MyContext({ContextOptions: frameOptions});
 
         l.HandleEvent(requestAdapter, eventContext).then(responseModel => {
+            let templateModel = responseModel as TemplateResponseModel;
             expect(responseModel.responseFrame.name).eq("BFrame");
             expect(responseModel.responseFrameIndex).eq(0);
-            let templateModel = responseModel as TemplateResponseModel;
             expect(templateModel.ssml).eq("<speak>Hello, mocha!</speak>");
             done();
+        }, error => {
+            console.log(error + error.message);
+            done(error);
         }).catch(error => {
             console.log(error + error.message);
-            expect(error).equal(undefined);
-            done();
+            done(error);
+        });
+    });
+
+    it("can catch redirect loops", (done) => {
+        interface IMyContext extends LarynxEventOptions {
+        }
+
+        class MyContext implements IMyContext {
+            stuff: string;
+            attributes: any;
+
+            constructor(options: {ContextOptions: IMyContext}) {
+                this.stuff = options.ContextOptions.stuff;
+                this.attributes = options.ContextOptions.attributes;
+            }
+        }
+
+        let AFrameImpl = class extends MyContext implements IFrame {
+            pre = function () {
+                return new Promise(resolve => {
+                    resolve(new RedirectResponse(true, "BFrame"));
+                });
+            };
+            sessionEnded = function () {
+                return new Promise(resolve => {
+                    resolve();
+                });
+            };
+        };
+
+        let BFrameImpl = class extends MyContext implements IFrame {
+            pre = function () {
+                return new Promise(resolve => {
+                    resolve(new RedirectResponse(true, "AFrame"));
+                });
+            };
+            prompts = function () {
+                return new TemplateResponseModel("hello world", "<speak>Hello, " + this.stuff + "!</speak>");
+            };
+            sessionEnded = function () {
+                return new Promise(resolve => {
+                    resolve();
+                });
+            };
+        };
+
+        let l = sdk.initialize({});
+
+        let AFrameContainer = new EventContainer({name: "AFrame"}, AFrameImpl, [{name: "BFrame"}]);
+        let BFrameContainer = new EventContainer({name: "BFrame"}, BFrameImpl, [{name: "AFrame"}]);
+
+        l.Register(AFrameContainer);
+        l.Register(BFrameContainer);
+
+        let requestAdapter = new AlexaRequestAdapter(AlexaLaunchRequest, {name: "AFrame"});
+
+        let frameOptions: IMyContext = {
+            stuff: "mocha",
+            attributes: AlexaLaunchRequest.session.attributes
+        };
+
+        let eventContext = new MyContext({ContextOptions: frameOptions});
+
+        l.HandleEvent(requestAdapter, eventContext).then(
+            () => {
+                throw new Error("This shouldn't happen!");
+            },
+            error => {
+                expect(error.message).equal("Too many redirects! Check for loops!");
+                done();
+            }).catch(error => {
+            done(error);
         });
     });
 });
