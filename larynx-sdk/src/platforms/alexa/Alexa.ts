@@ -11,8 +11,8 @@ namespace AlexaClasses {
     import LarynxEventContext = CommonClasses.LarynxEventContext;
     import LarynxEventContextOptions = CommonClasses.LarynxEventContextOptions;
     import LarynxEventHandler = LarynxInterfaces.LarynxEventHandler;
-    import RequestBody = Alexa.RequestBody;
     import SessionEndedRequest = Alexa.SessionEndedRequest;
+    import AlexaRequestBody = Alexa.AlexaRequestBody;
 
     interface AlexaContextOptions extends LarynxEventContextOptions {
     }
@@ -27,7 +27,7 @@ namespace AlexaClasses {
      * Transforms an Alexa request body into a common format for Larynx
      */
     class AlexaRequestAdapter implements LarynxEventHandler {
-        constructor(event: RequestBody) {
+        constructor(event: AlexaRequestBody) {
             this.event = event;
             this.defaultFrame = {
                 name: "redirect"
@@ -65,7 +65,7 @@ namespace AlexaClasses {
         currentFrame: Frames;
         currentFrameIndex: number;
         defaultFrame: Frames;
-        event: RequestBody;
+        event: AlexaRequestBody;
         transform: () => LarynxEvent;
     }
 }

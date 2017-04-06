@@ -1,3 +1,4 @@
+///<reference path="interfaces.d.ts"/>
 import {AlexaRequestType, CardType, OutputSpeechType, SessionEndedReason} from "./Alexa";
 /**
  * Alexa Skills Kit TypeScript definitions built from
@@ -7,6 +8,7 @@ import {AlexaRequestType, CardType, OutputSpeechType, SessionEndedReason} from "
  */
 declare namespace Alexa {
 
+    import RequestBody = LarynxInterfaces.RequestBody;
     /**
      * The request body sent to your service is in JSON format.
      * @example
@@ -23,6 +25,9 @@ declare namespace Alexa {
                 },
                 "user": {
                     "userId": "string",
+                    "permissions": {
+                            "consentToken": "string"
+                     },
                     "accessToken": "string"
                 }
             },
@@ -33,9 +38,13 @@ declare namespace Alexa {
                     },
                     "user": {
                         "userId": "string",
+                        "permissions": {
+                            "consentToken": "string"
+                        },
                         "accessToken": "string"
                     },
                     "device": {
+                        "deviceId": "string",
                         "supportedInterfaces": {
                             "AudioPlayer": {}
                         }
@@ -50,7 +59,7 @@ declare namespace Alexa {
             "request": object
         }
      */
-    export interface RequestBody {
+    export interface AlexaRequestBody extends RequestBody {
         /** The version specifier for the request with the value defined as: “1.0” */
         version: string;
         /** The session object provides session specific information associated with the request. */
@@ -93,9 +102,13 @@ declare namespace Alexa {
             },
             user: {
                 userId: string,
+                permissions: {
+                    consentToken: string
+                },
                 accessToken: string
             },
             device: {
+                deviceId: string,
                 supportedInterfaces: {
                     AudioPlayer: any
                 }
@@ -114,6 +127,10 @@ declare namespace Alexa {
         userId: string;
         /** A token identifying the user in another system. This is only provided if the user has successfully linked their account. See [Linking an Alexa User with a User in Your System](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/linking-an-alexa-user-with-a-user-in-your-system) for more details. */
         accessToken?: string;
+        /** Contains a consentToken allowing the skill access to information that the customer has consented to provide **/
+        permissions?: {
+            consentToken: string
+        };
     }
 
     /**
