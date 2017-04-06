@@ -12,7 +12,6 @@ import ISessionContext = LarynxInterfaces.ISessionContext;
 import RedirectResponse = CommonClasses.RedirectResponse;
 import TemplateResponseModel = CommonClasses.TemplateResponseModel;
 import {expect} from "chai";
-import {error} from "util";
 
 class SessionContextOptions {
     stuff: string;
