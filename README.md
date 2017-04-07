@@ -5,6 +5,9 @@ This is an SDK for building natural language apps.
 ## Usage
 
 ```
+git clone https://github.com/vokkal/larynx-sdk.git
+cd larynx-sdk
+npm install
 
 ```
 
@@ -12,7 +15,7 @@ This is an SDK for building natural language apps.
 
 
 ```
-npm test
+npm run test
 ```
 
 ## Building
