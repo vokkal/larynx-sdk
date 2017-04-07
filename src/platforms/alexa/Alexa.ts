@@ -1,17 +1,15 @@
-import * as CommonClasses from "../common/common";
-import {RequestType} from "../../definitions/Alexa";
-import * as Alexa from "../../definitions/AlexaService";
 
 namespace AlexaClasses {
     import EventAdapter = CommonClasses.EventAdapter;
     import Frames = LarynxInterfaces.Frames;
     import IntentRequest = Alexa.IntentRequest;
     import LarynxEvent = LarynxInterfaces.LarynxEvent;
-    import LarynxEventContext = CommonClasses.LarynxEventContext;
     import LarynxEventContextOptions = CommonClasses.LarynxEventContextOptions;
     import LarynxEventHandler = LarynxInterfaces.LarynxEventHandler;
     import SessionEndedRequest = Alexa.SessionEndedRequest;
     import AlexaRequestBody = Alexa.AlexaRequestBody;
+    import RequestType = Alexa.RequestType;
+    import LarynxEventContext = CommonClasses.LarynxEventContext;
 
     export interface AlexaContextOptions extends LarynxEventContextOptions {
     }
@@ -65,4 +63,3 @@ namespace AlexaClasses {
     }
 }
 
-export = AlexaClasses;

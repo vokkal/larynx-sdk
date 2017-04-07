@@ -1,17 +1,15 @@
-import * as AlexaClasses from "../src/platforms/alexa/Alexa";
-import * as CommonClasses from "../src/platforms/common/common";
-import * as LarynxClasses from "../src/platforms/implementations";
-import * as sdk from "../src/index";
 import ActionResponseModel = LarynxInterfaces.ActionResponseModel;
 import AlexaRequestAdapter = AlexaClasses.AlexaRequestAdapter;
 import AlexaRequestBody = Alexa.AlexaRequestBody;
-import EventContainer = LarynxClasses.EventContainer;
 import Frames = LarynxInterfaces.Frames;
 import IFrame = LarynxInterfaces.IFrame;
 import ISessionContext = LarynxInterfaces.ISessionContext;
 import RedirectResponse = CommonClasses.RedirectResponse;
 import TemplateResponseModel = CommonClasses.TemplateResponseModel;
 import {expect} from "chai";
+import EventContainer = LarynxClasses.EventContainer;
+
+let sdk = require("../src/index");
 
 class SessionContextOptions {
     stuff: string;
@@ -139,7 +137,7 @@ describe("obj", () => {
             };
         }
 
-        let l = sdk.initialize({});
+        let l = sdk({});
 
         let frameImpl = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
 
@@ -172,7 +170,7 @@ describe("obj", () => {
             };
         }
 
-        let l = sdk.initialize({});
+        let l = sdk({});
 
         let frameImpl = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
         let frameImpl2 = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
@@ -307,7 +305,7 @@ describe("obj", () => {
             };
         };
 
-        let l = sdk.initialize({});
+        let l = sdk({});
 
         let AFrameContainer = new EventContainer({name: "AFrame"}, AFrameImpl, [{name: "BFrame"}]);
         let BFrameContainer = new EventContainer({name: "BFrame"}, BFrameImpl, []);
@@ -324,16 +322,15 @@ describe("obj", () => {
 
         let eventContext = new MyContext({ContextOptions: frameOptions});
 
-        l.HandleEvent(requestAdapter, eventContext).then(responseModel => {
-            let templateModel = responseModel as TemplateResponseModel;
+        l.HandleEvent(requestAdapter, eventContext).then((responseModel: TemplateResponseModel) => {
             expect(responseModel.responseFrame.name).eq("BFrame");
             expect(responseModel.responseFrameIndex).eq(0);
-            expect(templateModel.ssml).eq("<speak>Hello, mocha!</speak>");
+            expect(responseModel.ssml).eq("<speak>Hello, mocha!</speak>");
             done();
-        }, error => {
+        }, (error: Error) => {
             console.log(error + error.message);
             done(error);
-        }).catch(error => {
+        }).catch((error: Error) => {
             console.log(error + error.message);
             done(error);
         });
@@ -403,10 +400,10 @@ describe("obj", () => {
             () => {
                 throw new Error("This shouldn't happen!");
             },
-            error => {
+            (error: Error) => {
                 expect(error.message).equal("Too many redirects! Check for loops!");
                 done();
-            }).catch(error => {
+            }).catch((error: Error) => {
             done(error);
         });
     });

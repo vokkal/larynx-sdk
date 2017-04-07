@@ -1,26 +1,27 @@
-/// <reference path="../node_modules/typescript/lib/lib.es6.d.ts" />
-import * as LarynxClasses from "./platforms/implementations";
-import * as CommonClasses from "./platforms/common/common";
-
-import Actions = LarynxInterfaces.Actions;
 import ActionResponseModel = LarynxInterfaces.ActionResponseModel;
-import CreatesFrame = LarynxInterfaces.CreatesFrame;
-import EventContainer = LarynxClasses.EventContainer;
+import Actions = LarynxInterfaces.Actions;
 import FrameRedirectResponse = LarynxInterfaces.FrameRedirectResponse;
-import Frames = LarynxInterfaces.Frames;
 import IEventContainer = LarynxInterfaces.IEventContainer;
 import IFrame = LarynxInterfaces.IFrame;
 import ISessionContext = LarynxInterfaces.ISessionContext;
-import LarynxEvent = LarynxInterfaces.LarynxEvent;
-import RedirectResponse = CommonClasses.RedirectResponse;
 import LarynxEventHandler = LarynxInterfaces.LarynxEventHandler;
+import RedirectResponse = CommonClasses.RedirectResponse;
 
 let pug = require("pug");
 let parser = require("xml2json");
 
 let _redirectLimit = 10;
+let _instance: any = undefined;
 
-export const initialize = function (options: any) {
+export default (options: any) => {
+    if (!_instance) {
+        _instance = initialize(options);
+    }
+
+    return _instance;
+};
+
+function initialize(options: any) {
     let _larynxFrames: {[key: string]: Array<IEventContainer>} = {};
     let _larynxActions: {[key: string]: Actions} = {};
 
@@ -124,58 +125,4 @@ async function checkForRedirect(frame: IFrame): Promise<FrameRedirectResponse> {
     } else {
         return new RedirectResponse(false);
     }
-}
-
-/**
- * Copy properties of source object to target object excluding constructor.
- * If a property with the same exists on the target it is NOT overwritten.
- *
- * @param target
- * @param source
- */
-function extend(target: any, source: any) {
-    Object.getOwnPropertyNames(source).forEach(name => {
-        if (name !== "constructor" && !target.hasOwnProperty(name)) {
-            Object.defineProperty(target, name,
-                Object.getOwnPropertyDescriptor(source, name));
-        }
-    });
-}
-
-
-/**
- * Create a constructor function for a class implementing the given mixins.
- *
- * @param defaultOptions options that will be used if some options are missing at construction time
- * @param mixins array of classes to be mixed together. The constructor of those classes will receive the options given
- *               to the constructor of the composed object
- * @returns {{new(any): {}}} a constructor function
- */
-function compose(defaultOptions: any, mixins: any[]) {
-
-    // our constructor function that will be called every time a new composed object is created
-    let ctor = function (options: any) {
-        let o = {};
-        // clone options given to the constructor
-        if (options) {
-            extend(o, options);
-        }
-        // complete with the defaultOptions
-        if (defaultOptions) {
-            extend(o, defaultOptions);
-        }
-
-        // call the constructor function of all the mixins
-        mixins.forEach(mixin => {
-            mixin.call(this, o);
-        });
-    };
-
-    // add all mixins properties and methods to the constructor prototype for all
-    // created objects to have them
-    mixins.forEach(mixin => {
-        extend(ctor.prototype, mixin.prototype);
-    });
-
-    return ctor;
 }

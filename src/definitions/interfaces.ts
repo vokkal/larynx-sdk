@@ -1,4 +1,4 @@
-declare namespace LarynxInterfaces {
+namespace LarynxInterfaces {
 
     export interface Frames {
         name: string;
@@ -80,7 +80,4 @@ declare namespace LarynxInterfaces {
         impl: CreatesFrame;
         targets: Array<Frames>;
     }
-
 }
-export = LarynxInterfaces;
-export as namespace LarynxInterfaces;

@@ -1,6 +1,3 @@
-import * as LarynxInterfaces from "../../definitions/interfaces";
-import * as Alexa from "../../definitions/AlexaService";
-
 namespace CommonClasses {
     import ISessionContext = LarynxInterfaces.ISessionContext;
     import LarynxEvent = LarynxInterfaces.LarynxEvent;
@@ -69,5 +66,3 @@ namespace CommonClasses {
         };
     }
 }
-
-export = CommonClasses;

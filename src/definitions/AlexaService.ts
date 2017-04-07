@@ -1,13 +1,10 @@
-///<reference path="interfaces.d.ts"/>
-import {AlexaRequestType, CardType, OutputSpeechType, SessionEndedReason} from "./Alexa";
 /**
  * Alexa Skills Kit TypeScript definitions built from
  * [Alexa Skills Kit Interface Reference](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/alexa-skills-kit-interface-reference).
  *
  * Date: 2016/04/01
  */
-declare namespace Alexa {
-
+namespace Alexa {
     import RequestBody = LarynxInterfaces.RequestBody;
     /**
      * The request body sent to your service is in JSON format.
@@ -404,6 +401,3 @@ declare namespace Alexa {
         getRemainingTimeInMillis(): number;
     }
 }
-
-export = Alexa;
-export as namespace Alexa;
