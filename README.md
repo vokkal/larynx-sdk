@@ -23,6 +23,6 @@ npm run build
 
 ## License
 
-Free for non-commercial usage.
+Apache 2.0
 
-See License.txt
+See LICENSE

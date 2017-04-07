@@ -11,7 +11,7 @@
   },
   "main": "./build/larynx.js",
   "types": "./build/larynx.d.ts",
-  "license": "SEE LICENSE IN License.txt",
+  "license": "SEE LICENSE IN LICENSE",
   "files": [
     "/build/larynx*"
   ],
