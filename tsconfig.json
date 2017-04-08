@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
     "outDir": "build/",
-    "outFile": "build/larynx.js",
     "sourceMap": true,
-    "module": "amd",
+    "module": "commonjs",
     "moduleResolution": "node",
     "noEmitOnError": true,
     "target": "es5",
@@ -15,7 +14,8 @@
   },
   "include": [
     "src/platforms/common/**/*.ts",
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "tests/**/*.ts"
   ],
   "exclude": [
     "lib",
