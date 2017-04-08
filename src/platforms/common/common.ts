@@ -5,6 +5,7 @@ namespace CommonClasses {
     import Frames = LarynxInterfaces.Frames;
     import FrameRedirectResponse = LarynxInterfaces.FrameRedirectResponse;
     import ActionResponseModel = LarynxInterfaces.ActionResponseModel;
+    import Actions = LarynxInterfaces.Actions;
 
     export interface LarynxEventContextOptions extends ISessionContext {
         appId: string;
@@ -24,7 +25,7 @@ namespace CommonClasses {
      * params: intent params
      */
     export class EventAdapter implements LarynxEvent {
-        name: string;
+        name: Actions;
         params: any;
 
         constructor(name: any, params: any) {
@@ -65,6 +66,7 @@ namespace CommonClasses {
             speech: string,
             reprompt?: string;
         };
+        endsSession: boolean;
     }
 }
 

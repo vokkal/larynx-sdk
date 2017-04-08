@@ -1,4 +1,3 @@
-
 import * as LarynxInterfaces from "../../definitions/interfaces";
 import * as CommonClasses from "../common/common";
 import * as AlexaService from "../../definitions/AlexaService";
@@ -13,6 +12,7 @@ namespace AlexaClasses {
     import RequestType = AlexaService.RequestType;
     import IntentRequest = AlexaService.IntentRequest;
     import SessionEndedRequest = AlexaService.SessionEndedRequest;
+    import Actions = LarynxInterfaces.Actions;
 
     export interface AlexaContextOptions extends LarynxEventContextOptions {
     }
@@ -31,6 +31,7 @@ namespace AlexaClasses {
             this.defaultFrame = defaultFrame;
             this.currentFrame = requestBody.session.attributes["currentFrame"] || this.defaultFrame;
             this.currentFrameIndex = requestBody.session.attributes["currentFrameIndex"] || 0;
+            this.waitingForTransition = requestBody.session.attributes["waitingForTransition"];
             this.transform(requestBody);
         };
 
@@ -39,30 +40,33 @@ namespace AlexaClasses {
          * @returns {EventAdapter}
          */
         transform = function (event: AlexaRequestBody) {
-            let eventName = "";
+            let eventAction: Actions = {
+                name: ""
+            };
             let eventParams = {};
             let eventType = event.request.type;
             if (eventType === RequestType.LaunchRequest) {
-                eventName = "LaunchRequest";
+                eventAction.name = "LaunchRequest";
             } else if (eventType === RequestType.IntentRequest) {
                 let eventRequest = event.request as IntentRequest;
-                eventName = eventRequest.intent.name;
+                eventAction.name = eventRequest.intent.name;
                 eventParams = eventRequest.intent.slots;
             } else {
                 let eventRequest = event.request as SessionEndedRequest;
-                eventName = "SessionEndedRequest";
+                eventAction.name = "SessionEndedRequest";
                 eventParams = {
                     reason: eventRequest.reason,
                     error: eventRequest.error
                 };
             }
 
-            return new EventAdapter(eventName, eventParams);
+            return new EventAdapter(eventAction, eventParams);
         };
         currentFrame: Frames;
         currentFrameIndex: number;
         defaultFrame: Frames;
         event: EventAdapter;
+        waitingForTransition: boolean;
     }
 }
 

@@ -12,6 +12,9 @@ import IEventContainer = LarynxInterfaces.IEventContainer;
 import IFrame = LarynxInterfaces.IFrame;
 import ISessionContext = LarynxInterfaces.ISessionContext;
 import LarynxEventHandler = LarynxInterfaces.LarynxEventHandler;
+import GenericAction = LarynxInterfaces.GenericAction;
+import NamedAction = LarynxInterfaces.NamedAction;
+import Frames = LarynxInterfaces.Frames;
 
 let pug = require("pug");
 let parser = require("xml2json");
@@ -44,40 +47,63 @@ function props(options: any) {
             let frameContainer = frameArr[frameIndex ? frameIndex : (Math.floor(Math.random() * frameArr.length))];
             let frameImpl = new frameContainer.impl({ContextOptions: options});
 
-            let redirect = true;
-            let count = 0;
-            let response = new RedirectResponse(false);
-
-            let redirectPath = eventHandler.currentFrame.name;
-            while (redirect) {
-                let response = await checkForRedirect.call(frameImpl, frameImpl);
-
-                if (response.err) {
-                    console.log(`Redirect error: ${response.err}, ${response.err.message}`);
-                    throw response.err;
-                } else if (count >= _redirectLimit) {
-                    throw new Error("Too many redirects!\n" + redirectPath);
-                }
-
-                if (response.frameRedirect) {
-                    redirectPath += " => " + response.result.name;
-                    let newFrames = _larynxFrames[response.result.name];
-                    frameIndex = Math.floor(Math.random() * newFrames.length);
-                    frameImpl = new newFrames[frameIndex].impl({ContextOptions: options});
-                    frameId = response.result;
-                    count++;
+            if (eventHandler.waitingForTransition && !!frameImpl.transitions) {
+                let actionHandlers = frameImpl.transitions;
+                let newFrame: Frames;
+                if (!actionHandlers.actions) {
+                    newFrame = await resolveAction.call(this, actionHandlers.unhandled);
                 } else {
-                    redirect = false;
+                    newFrame = await getAction.call(this, actionHandlers.actions);
                 }
+                let newFrames = _larynxFrames[newFrame.name];
+                frameIndex = Math.floor(Math.random() * newFrames.length);
+                frameImpl = new newFrames[frameIndex].impl({ContextOptions: options});
+                frameId = newFrame;
+            } else if (eventHandler.waitingForTransition && !frameImpl.transitions) {
+                throw new Error("Expecting transitions but none defined!");
+            } else if (!eventHandler.waitingForTransition && !frameImpl.prompts && !frameImpl.pre) {
+                throw new Error(`Expecting prompts but none defined in frame: ${frameId.name}!`);
             }
 
-            let responseModel = await getResponseModel.call(frameImpl, frameImpl.prompts);
-            responseModel.responseFrame = frameId;
-            responseModel.responseFrameIndex = frameIndex;
-            return responseModel;
+            return await getActionResponse(eventHandler, options, frameImpl, frameIndex, frameId);
         }
     };
-};
+
+    async function getActionResponse(eventHandler: LarynxEventHandler, options: ISessionContext, frameImpl: IFrame, frameIndex: number, frameId: Frames) {
+        let redirect = true;
+        let count = 0;
+        let response = new RedirectResponse(false);
+
+        let redirectPath = eventHandler.currentFrame.name;
+        while (redirect) {
+            let response = await checkForRedirect.call(frameImpl, frameImpl);
+
+            if (response.err) {
+                console.log(`Redirect error: ${response.err}, ${response.err.message}`);
+                throw response.err;
+            } else if (count >= _redirectLimit) {
+                throw new Error("Too many redirects!\n" + redirectPath);
+            }
+
+            if (response.frameRedirect) {
+                redirectPath += " => " + response.result.name;
+                let newFrames = _larynxFrames[response.result.name];
+                frameIndex = Math.floor(Math.random() * newFrames.length);
+                frameImpl = new newFrames[frameIndex].impl({ContextOptions: options});
+                frameId = response.result;
+                count++;
+            } else {
+                redirect = false;
+            }
+        }
+
+        let responseModel = await getResponseModel.call(frameImpl, frameImpl.prompts);
+        responseModel.responseFrame = frameId;
+        responseModel.responseFrameIndex = frameIndex;
+        responseModel.endsSession = !!frameImpl.transitions;
+        return responseModel;
+    }
+}
 
 async function getResponseModel(prompts: ActionResponseModel  | (() => Promise<ActionResponseModel> ) | (() => ActionResponseModel ) |
     (Array<ActionResponseModel | (() => Promise<ActionResponseModel>) | (() => ActionResponseModel)>)): Promise<ActionResponseModel> {
@@ -87,6 +113,29 @@ async function getResponseModel(prompts: ActionResponseModel  | (() => Promise<A
         return resolvePrompt.call(this, prompt);
     } else {
         return resolvePrompt.call(this, prompts); // TODO: await here?
+    }
+}
+
+async function getAction(actions: NamedAction | Array<NamedAction>) {
+    if (actions instanceof Array) {
+        let action = actions[Math.floor(Math.random() * actions.length)];
+        return resolveAction.call(this, action);
+    } else {
+        return resolveAction.call(this, actions); // TODO: await here?
+    }
+}
+
+async function resolveAction(action: () => Frames | Frames | (() => Promise<Frames>)): Promise<Frames> {
+    try {
+        if (instanceOfGenericAction(action()) || instanceOfNamedAction(action)) {
+            return action;
+        } else if (isPromise(action)) {
+            return await action.call(this);
+        } else if (isFunction(action)) {
+            return action.call(this);
+        }
+    } catch (err) {
+        throw new Error("Error resolving action! " + err);
     }
 }
 
@@ -108,6 +157,14 @@ function instanceOfActionResponseModel(object: any): object is ActionResponseMod
     return "responseName" in object;
 }
 
+function instanceOfGenericAction(object: any): object is GenericAction {
+    return "handler" in object;
+}
+
+function instanceOfNamedAction(object: any): object is NamedAction {
+    return "handler" in object && "action" in object;
+}
+
 function isFunction(func: any) {
     return func && {}.toString.call(func) === "[object Function]";
 }
@@ -123,7 +180,6 @@ async function checkForRedirect(frame: IFrame): Promise<FrameRedirectResponse> {
         return new RedirectResponse(false);
     }
 }
-
 
 
 export function initialize(options: any): any {

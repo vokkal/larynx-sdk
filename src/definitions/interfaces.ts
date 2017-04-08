@@ -9,7 +9,7 @@ namespace LarynxInterfaces {
     }
 
     export interface LarynxEvent {
-        name: string;
+        name: Actions;
         params: any;
     }
 
@@ -20,6 +20,7 @@ namespace LarynxInterfaces {
         transform: (event: RequestBody) => LarynxEvent |
             ((event: RequestBody) => Promise<LarynxEvent>);
         event: LarynxEvent;
+        waitingForTransition: boolean;
     }
 
     export interface RequestBody {
@@ -50,6 +51,7 @@ namespace LarynxInterfaces {
         responseName: string;
         responseFrame: Frames;
         responseFrameIndex?: number;
+        endsSession: boolean;
     }
 
     export interface ActionHandlers {

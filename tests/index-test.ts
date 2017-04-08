@@ -38,7 +38,7 @@ describe("obj", () => {
         }
 
         class AFrameImpl extends LarynxEventOptions implements IFrame {
-            prompts = {responseName: "action response", responseFrame: {name: "AFrameImpl"}};
+            prompts = {responseName: "action response", responseFrame: {name: "AFrameImpl"}, endsSession: true};
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
@@ -74,7 +74,7 @@ describe("obj", () => {
 
         class B extends MyContext implements IFrame {
             frameName = "AFrameImpl";
-            prompts = {responseName: "action response", responseFrame: {name: "AFrameImpl"}};
+            prompts = {responseName: "action response", responseFrame: {name: "AFrameImpl"}, endsSession: true};
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
@@ -101,7 +101,7 @@ describe("obj", () => {
 
         class AFrameImpl extends MyContext implements IFrame {
             frameName = "AFrameImpl";
-            prompts = {responseName: "action response", responseFrame: {name: "AFrameImpl"}};
+            prompts = {responseName: "action response", responseFrame: {name: "AFrameImpl"}, endsSession: true};
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
@@ -131,7 +131,7 @@ describe("obj", () => {
         }
 
         class AFrameImpl extends MyContext implements IFrame {
-            prompts = {responseName: "first value", responseFrame: {name: "aFrameImpl"}};
+            prompts = {responseName: "first value", responseFrame: {name: "aFrameImpl"}, endsSession: true};
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
@@ -164,7 +164,7 @@ describe("obj", () => {
         }
 
         class AFrameImpl extends MyContext implements IFrame {
-            prompts = {responseName: "the value", responseFrame: {name: "AFrameImpl"}};
+            prompts = {responseName: "the value", responseFrame: {name: "AFrameImpl"}, endsSession: true};
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
@@ -211,7 +211,8 @@ describe("obj", () => {
                 return {
                     responseName: "first value",
                     responseFrame: {name: "AFrameImpl"},
-                    newVal: this.stuff
+                    newVal: this.stuff,
+                    endsSession: true
                 };
             };
             sessionEnded = function () {
@@ -226,7 +227,8 @@ describe("obj", () => {
                 return {
                     responseName: "second value",
                     responseFrame: {name: "AFrameImpl"},
-                    newVal: this.stuff
+                    newVal: this.stuff,
+                    endsSession: true
                 };
             };
             sessionEnded = function () {
@@ -257,6 +259,7 @@ describe("obj", () => {
             responseName: string;
             responseFrame: Frames;
             newVal: string;
+            endsSession: boolean;
         }
 
         expect((A0.prompts as () => ExtendedResponse)().responseName).eq("first value");
@@ -283,6 +286,9 @@ describe("obj", () => {
                 return new Promise(resolve => {
                     resolve(new RedirectResponse(true, "BFrame"));
                 });
+            };
+            prompts = function () {
+                return new TemplateResponseModel("hello world", "<speak>Hello, " + this.stuff + "!</speak>");
             };
             sessionEnded = function () {
                 return new Promise(resolve => {
