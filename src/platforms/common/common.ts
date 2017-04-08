@@ -1,5 +1,5 @@
-import {LarynxInterfaces} from "../../definitions/interfaces";
-export namespace CommonClasses {
+import * as LarynxInterfaces from "../../definitions/interfaces";
+namespace CommonClasses {
     import ISessionContext = LarynxInterfaces.ISessionContext;
     import LarynxEvent = LarynxInterfaces.LarynxEvent;
     import Frames = LarynxInterfaces.Frames;
@@ -67,3 +67,5 @@ export namespace CommonClasses {
         };
     }
 }
+
+export = CommonClasses;

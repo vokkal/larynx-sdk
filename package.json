@@ -10,7 +10,7 @@
     "prepublish": "npm run clean && npm run test && mkdir dist && cp -r build/src/* dist/ && cp -r templates dist/templates"
   },
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
   "license": "SEE LICENSE IN LICENSE",
   "files": [
     "dist/**/*"

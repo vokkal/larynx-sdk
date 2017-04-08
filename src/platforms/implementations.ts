@@ -1,5 +1,5 @@
-import {LarynxInterfaces} from "../definitions/interfaces";
-export namespace LarynxClasses {
+import * as LarynxInterfaces from "../definitions/interfaces";
+namespace LarynxClasses {
     import IEventContainer = LarynxInterfaces.IEventContainer;
     import Frames = LarynxInterfaces.Frames;
     import CreatesFrame = LarynxInterfaces.CreatesFrame;
@@ -17,3 +17,5 @@ export namespace LarynxClasses {
 
     }
 }
+
+export = LarynxClasses;

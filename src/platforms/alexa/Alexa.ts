@@ -1,8 +1,8 @@
-import {CommonClasses} from "../common/common";
-import {LarynxInterfaces} from "../../definitions/interfaces";
-import {AlexaService} from "../../definitions/AlexaService";
 
-export namespace AlexaClasses {
+import * as LarynxInterfaces from "../../definitions/interfaces";
+import * as CommonClasses from "../common/common";
+import * as AlexaService from "../../definitions/AlexaService";
+namespace AlexaClasses {
     import EventAdapter = CommonClasses.EventAdapter;
     import Frames = LarynxInterfaces.Frames;
     import LarynxEvent = LarynxInterfaces.LarynxEvent;
@@ -65,4 +65,6 @@ export namespace AlexaClasses {
         event: EventAdapter;
     }
 }
+
+export = AlexaClasses;
 

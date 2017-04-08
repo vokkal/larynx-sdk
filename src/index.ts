@@ -1,6 +1,10 @@
-import {LarynxInterfaces} from "./definitions/interfaces";
-import {CommonClasses} from "./platforms/common/common";
+export import LarynxInterfaces = require("./definitions/interfaces");
+export import AlexaService = require("./definitions/AlexaService");
+export import AlexaClasses = require("./platforms/alexa/Alexa");
+export import CommonClasses = require("./platforms/common/common");
+export import LarynxClasses = require("./platforms/implementations");
 
+import RedirectResponse = CommonClasses.RedirectResponse;
 import ActionResponseModel = LarynxInterfaces.ActionResponseModel;
 import Actions = LarynxInterfaces.Actions;
 import FrameRedirectResponse = LarynxInterfaces.FrameRedirectResponse;
@@ -8,21 +12,12 @@ import IEventContainer = LarynxInterfaces.IEventContainer;
 import IFrame = LarynxInterfaces.IFrame;
 import ISessionContext = LarynxInterfaces.ISessionContext;
 import LarynxEventHandler = LarynxInterfaces.LarynxEventHandler;
-import RedirectResponse = CommonClasses.RedirectResponse;
 
 let pug = require("pug");
 let parser = require("xml2json");
 
 let _redirectLimit = 10;
 let _instance: any = undefined;
-
-export function initialize(options: any) {
-    if (!_instance || options.reset) {
-        _instance = props(options);
-    }
-
-    return _instance;
-};
 
 function props(options: any) {
     let _larynxFrames: {[key: string]: Array<IEventContainer>} = {};
@@ -129,3 +124,12 @@ async function checkForRedirect(frame: IFrame): Promise<FrameRedirectResponse> {
     }
 }
 
+
+
+export function initialize(options: any): any {
+    if (!_instance || options.reset) {
+        _instance = props(options);
+    }
+
+    return _instance;
+}

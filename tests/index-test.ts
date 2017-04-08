@@ -1,8 +1,4 @@
-import {LarynxClasses} from "../src/platforms/implementations";
-import {CommonClasses} from "../src/platforms/common/common";
-import {AlexaClasses} from "../src/platforms/alexa/Alexa";
-import {LarynxInterfaces} from "../src/definitions/interfaces";
-import {AlexaService} from "../src/definitions/AlexaService";
+import {AlexaClasses, AlexaService, CommonClasses, LarynxClasses, LarynxInterfaces} from "../src/index";
 import {expect} from "chai";
 
 import ISessionContext = LarynxInterfaces.ISessionContext;

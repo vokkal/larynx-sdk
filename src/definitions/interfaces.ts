@@ -1,4 +1,4 @@
-export namespace LarynxInterfaces {
+namespace LarynxInterfaces {
 
     export interface Frames {
         name: string;
@@ -81,3 +81,5 @@ export namespace LarynxInterfaces {
         targets: Array<Frames>;
     }
 }
+
+export = LarynxInterfaces;

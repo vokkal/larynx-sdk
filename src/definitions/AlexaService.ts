@@ -1,11 +1,11 @@
-import {LarynxInterfaces} from "./interfaces";
+import * as LarynxInterfaces from "./interfaces";
 /**
  * Alexa Skills Kit TypeScript definitions built from
  * [Alexa Skills Kit Interface Reference](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/alexa-skills-kit-interface-reference).
  *
  * Date: 2016/04/01
  */
-export namespace AlexaService {
+namespace AlexaService {
     import RequestBody = LarynxInterfaces.RequestBody;
     export type AlexaRequestType = "LaunchRequest" | "IntentRequest" | "SessionEndedRequest";
 
@@ -436,3 +436,5 @@ export namespace AlexaService {
         getRemainingTimeInMillis(): number;
     }
 }
+
+export = AlexaService;
