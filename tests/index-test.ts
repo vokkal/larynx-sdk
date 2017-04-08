@@ -1,13 +1,19 @@
-import ActionResponseModel = LarynxInterfaces.ActionResponseModel;
-import AlexaRequestAdapter = AlexaClasses.AlexaRequestAdapter;
-import AlexaRequestBody = Alexa.AlexaRequestBody;
-import Frames = LarynxInterfaces.Frames;
-import IFrame = LarynxInterfaces.IFrame;
-import ISessionContext = LarynxInterfaces.ISessionContext;
-import RedirectResponse = CommonClasses.RedirectResponse;
-import TemplateResponseModel = CommonClasses.TemplateResponseModel;
+import {LarynxClasses} from "../src/platforms/implementations";
+import {CommonClasses} from "../src/platforms/common/common";
+import {AlexaClasses} from "../src/platforms/alexa/Alexa";
+import {LarynxInterfaces} from "../src/definitions/interfaces";
+import {AlexaService} from "../src/definitions/AlexaService";
 import {expect} from "chai";
+
+import ISessionContext = LarynxInterfaces.ISessionContext;
+import IFrame = LarynxInterfaces.IFrame;
+import Frames = LarynxInterfaces.Frames;
 import EventContainer = LarynxClasses.EventContainer;
+import ActionResponseModel = LarynxInterfaces.ActionResponseModel;
+import RedirectResponse = CommonClasses.RedirectResponse;
+import AlexaRequestAdapter = AlexaClasses.AlexaRequestAdapter;
+import TemplateResponseModel = CommonClasses.TemplateResponseModel;
+import AlexaRequestBody = AlexaService.AlexaRequestBody;
 
 let sdk = require("../src/index");
 
@@ -137,7 +143,7 @@ describe("obj", () => {
             };
         }
 
-        let l = sdk({});
+        let l = sdk.initialize({reset: true});
 
         let frameImpl = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
 
@@ -170,7 +176,7 @@ describe("obj", () => {
             };
         }
 
-        let l = sdk({});
+        let l = sdk.initialize({reset: true});
 
         let frameImpl = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
         let frameImpl2 = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
@@ -234,7 +240,7 @@ describe("obj", () => {
             };
         };
 
-        let l = sdk.initialize({});
+        let l = sdk.initialize({reset: true});
 
         let frameImpl = new EventContainer({name: "aFrameImpl"}, AFrameImpl, []);
         let frameImpl2 = new EventContainer({name: "aFrameImpl"}, BFrameImpl, []);
@@ -305,7 +311,7 @@ describe("obj", () => {
             };
         };
 
-        let l = sdk({});
+        let l = sdk.initialize({reset: true});
 
         let AFrameContainer = new EventContainer({name: "AFrame"}, AFrameImpl, [{name: "BFrame"}]);
         let BFrameContainer = new EventContainer({name: "BFrame"}, BFrameImpl, []);
@@ -379,7 +385,7 @@ describe("obj", () => {
             };
         };
 
-        let l = sdk.initialize({});
+        let l = sdk.initialize({reset: true});
 
         let AFrameContainer = new EventContainer({name: "AFrame"}, AFrameImpl, [{name: "BFrame"}]);
         let BFrameContainer = new EventContainer({name: "BFrame"}, BFrameImpl, [{name: "AFrame"}]);
@@ -401,7 +407,7 @@ describe("obj", () => {
                 throw new Error("This shouldn't happen!");
             },
             (error: Error) => {
-                expect(error.message).equal("Too many redirects! Check for loops!");
+                expect(error.message).equal("Too many redirects!\nAFrame => BFrame => AFrame => BFrame => AFrame => BFrame => AFrame => BFrame => AFrame => BFrame => AFrame");
                 done();
             }).catch((error: Error) => {
             done(error);
