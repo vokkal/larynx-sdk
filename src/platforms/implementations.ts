@@ -1,4 +1,5 @@
-namespace LarynxClasses {
+import {LarynxInterfaces} from "../definitions/interfaces";
+export namespace LarynxClasses {
     import IEventContainer = LarynxInterfaces.IEventContainer;
     import Frames = LarynxInterfaces.Frames;
     import CreatesFrame = LarynxInterfaces.CreatesFrame;

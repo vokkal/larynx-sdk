@@ -1,4 +1,5 @@
-namespace CommonClasses {
+import {LarynxInterfaces} from "../../definitions/interfaces";
+export namespace CommonClasses {
     import ISessionContext = LarynxInterfaces.ISessionContext;
     import LarynxEvent = LarynxInterfaces.LarynxEvent;
     import Frames = LarynxInterfaces.Frames;

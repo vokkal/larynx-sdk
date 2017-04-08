@@ -1,4 +1,4 @@
-namespace LarynxInterfaces {
+export namespace LarynxInterfaces {
 
     export interface Frames {
         name: string;

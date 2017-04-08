@@ -1,3 +1,6 @@
+import {LarynxInterfaces} from "./definitions/interfaces";
+import {CommonClasses} from "./platforms/common/common";
+
 import ActionResponseModel = LarynxInterfaces.ActionResponseModel;
 import Actions = LarynxInterfaces.Actions;
 import FrameRedirectResponse = LarynxInterfaces.FrameRedirectResponse;
@@ -13,15 +16,15 @@ let parser = require("xml2json");
 let _redirectLimit = 10;
 let _instance: any = undefined;
 
-export default (options: any) => {
-    if (!_instance) {
-        _instance = initialize(options);
+export function initialize(options: any) {
+    if (!_instance || options.reset) {
+        _instance = props(options);
     }
 
     return _instance;
 };
 
-function initialize(options: any) {
+function props(options: any) {
     let _larynxFrames: {[key: string]: Array<IEventContainer>} = {};
     let _larynxActions: {[key: string]: Actions} = {};
 
@@ -50,7 +53,7 @@ function initialize(options: any) {
             let count = 0;
             let response = new RedirectResponse(false);
 
-            console.log("checking redirect...");
+            let redirectPath = eventHandler.currentFrame.name;
             while (redirect) {
                 let response = await checkForRedirect.call(frameImpl, frameImpl);
 
@@ -58,12 +61,11 @@ function initialize(options: any) {
                     console.log(`Redirect error: ${response.err}, ${response.err.message}`);
                     throw response.err;
                 } else if (count >= _redirectLimit) {
-                    console.log(`Redirect error: too many redirects`);
-                    throw new Error("Too many redirects! Check for loops!");
+                    throw new Error("Too many redirects!\n" + redirectPath);
                 }
 
                 if (response.frameRedirect) {
-                    console.log("Redirection! => " + response.result.name);
+                    redirectPath += " => " + response.result.name;
                     let newFrames = _larynxFrames[response.result.name];
                     frameIndex = Math.floor(Math.random() * newFrames.length);
                     frameImpl = new newFrames[frameIndex].impl({ContextOptions: options});
@@ -126,3 +128,4 @@ async function checkForRedirect(frame: IFrame): Promise<FrameRedirectResponse> {
         return new RedirectResponse(false);
     }
 }
+
