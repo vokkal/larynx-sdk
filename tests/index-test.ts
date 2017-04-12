@@ -10,6 +10,8 @@ import RedirectResponse = CommonClasses.RedirectResponse;
 import AlexaRequestAdapter = AlexaClasses.AlexaRequestAdapter;
 import TemplateResponseModel = CommonClasses.TemplateResponseModel;
 import AlexaRequestBody = AlexaService.AlexaRequestBody;
+import {ActionHandlers, Actions, GenericAction, NamedAction} from "../src/definitions/interfaces";
+import {IntentRequest} from "../src/definitions/AlexaService";
 
 let sdk = require("../src/index");
 
@@ -24,7 +26,7 @@ class LarynxEventOptions implements ISessionContext {
 
     // constructor can take a config object
     // the same object will be given to all mixins
-    constructor(options: {ContextOptions: SessionContextOptions}) {
+    constructor(options: { ContextOptions: SessionContextOptions }) {
         this.stuff = options.ContextOptions.stuff;
         this.attributes = options.ContextOptions.attributes;
     }
@@ -64,7 +66,7 @@ describe("obj", () => {
         }
 
         class MyContext extends LarynxEventOptions {
-            constructor(options: {ContextOptions: IMyContext}) {
+            constructor(options: { ContextOptions: IMyContext }) {
                 super(options);
                 this.stuff2 = options.ContextOptions.stuff2;
             }
@@ -94,7 +96,7 @@ describe("obj", () => {
         }
 
         class MyContext extends LarynxEventOptions {
-            constructor(options: {ContextOptions: IMyContext}) {
+            constructor(options: { ContextOptions: IMyContext }) {
                 super(options);
             }
         }
@@ -125,7 +127,7 @@ describe("obj", () => {
         }
 
         class MyContext extends LarynxEventOptions {
-            constructor(options: {ContextOptions: IMyContext}) {
+            constructor(options: { ContextOptions: IMyContext }) {
                 super(options);
             }
         }
@@ -153,7 +155,7 @@ describe("obj", () => {
         }
 
         class MyContext extends LarynxEventOptions {
-            constructor(options: {ContextOptions: IMyContext}) {
+            constructor(options: { ContextOptions: IMyContext }) {
                 super(options);
             }
         }
@@ -196,7 +198,7 @@ describe("obj", () => {
         }
 
         class MyContext extends LarynxEventOptions {
-            constructor(options: {ContextOptions: IMyContext}) {
+            constructor(options: { ContextOptions: IMyContext }) {
                 super(options);
             }
         }
@@ -275,7 +277,7 @@ describe("obj", () => {
             stuff: string;
             attributes: any;
 
-            constructor(options: {ContextOptions: IMyContext}) {
+            constructor(options: { ContextOptions: IMyContext }) {
                 this.stuff = options.ContextOptions.stuff;
                 this.attributes = options.ContextOptions.attributes;
             }
@@ -321,7 +323,7 @@ describe("obj", () => {
         l.Register(AFrameContainer);
         l.Register(BFrameContainer);
 
-        let requestAdapter = new AlexaRequestAdapter(AlexaLaunchRequest, {name: "AFrame"});
+        let requestAdapter = new AlexaRequestAdapter(AlexaLaunchRequest, {name: "AFrame"}, l.Actions);
 
         let frameOptions: IMyContext = {
             stuff: "mocha",
@@ -330,15 +332,16 @@ describe("obj", () => {
 
         let eventContext = new MyContext({ContextOptions: frameOptions});
 
-        l.HandleEvent(requestAdapter, eventContext).then((responseModel: TemplateResponseModel) => {
-            expect(responseModel.responseFrame.name).eq("BFrame");
-            expect(responseModel.responseFrameIndex).eq(0);
-            expect(responseModel.ssml).eq("<speak>Hello, mocha!</speak>");
-            done();
-        }, (error: Error) => {
-            console.log(error + error.message);
-            done(error);
-        }).catch((error: Error) => {
+        l.HandleEvent(requestAdapter, eventContext).then(
+            (responseModel: TemplateResponseModel) => {
+                expect(responseModel.responseFrame.name).eq("BFrame");
+                expect(responseModel.responseFrameIndex).eq(0);
+                expect(responseModel.ssml).eq("<speak>Hello, mocha!</speak>");
+                done();
+            }, (error: Error) => {
+                console.log(error + error.message);
+                done(error);
+            }).catch((error: Error) => {
             console.log(error + error.message);
             done(error);
         });
@@ -352,7 +355,7 @@ describe("obj", () => {
             stuff: string;
             attributes: any;
 
-            constructor(options: {ContextOptions: IMyContext}) {
+            constructor(options: { ContextOptions: IMyContext }) {
                 this.stuff = options.ContextOptions.stuff;
                 this.attributes = options.ContextOptions.attributes;
             }
@@ -395,7 +398,7 @@ describe("obj", () => {
         l.Register(AFrameContainer);
         l.Register(BFrameContainer);
 
-        let requestAdapter = new AlexaRequestAdapter(AlexaLaunchRequest, {name: "AFrame"});
+        let requestAdapter = new AlexaRequestAdapter(AlexaLaunchRequest, {name: "AFrame"}, l.Actions);
 
         let frameOptions: IMyContext = {
             stuff: "mocha",
@@ -414,6 +417,195 @@ describe("obj", () => {
             }).catch((error: Error) => {
             done(error);
         });
+    });
+
+    it("can handle events", (done) => {
+        interface IMyContext {
+            attributes: any;
+            myVal: string;
+        }
+
+        class MyContext implements IMyContext {
+            myVal: string;
+            attributes: any;
+
+            constructor(options: { ContextOptions: IMyContext }) {
+                this.myVal = options.ContextOptions.myVal;
+                this.attributes = options.ContextOptions.attributes;
+            }
+        }
+
+        let unhandledFrame: Frames = {
+            name: "unhandled"
+        };
+
+        let answeredYesFrame: Frames = {
+            name: "answeredYes"
+        };
+
+        let answeredNoFrame: Frames = {
+            name: "answeredNo"
+        };
+
+        let unhandledAction: GenericAction = {
+            handler: () => {
+                return unhandledFrame;
+            }
+        };
+
+        let yesAction: Actions = {
+            name: "YesAction"
+        };
+
+        let noAction: Actions = {
+            name: "NoAction"
+        };
+
+        let yesHandler: NamedAction = {
+            action: yesAction,
+            handler: () => {
+                return answeredYesFrame;
+            }
+        };
+
+        let noHandler: NamedAction = {
+            action: noAction,
+            handler: function () {
+                return answeredNoFrame; // TODO: fix issue with using promise here
+            }
+        };
+
+        let actionHandlers: ActionHandlers = {
+            actions: [yesHandler, noHandler],
+            unhandled: unhandledAction
+        };
+
+        class StartNode extends MyContext implements IFrame {
+            prompts = function () {
+                return new TemplateResponseModel("hello", "<speak>say yes or no</speak>");
+            };
+            transitions = actionHandlers;
+            sessionEnded = function () {
+                return new Promise(resolve => {
+                    resolve();
+                });
+            };
+        }
+
+        class SaidNo extends MyContext implements IFrame {
+            prompts = function () {
+                return new TemplateResponseModel("hello", "<speak>user said no</speak>");
+            };
+            sessionEnded = function () {
+                return new Promise(resolve => {
+                    resolve();
+                });
+            };
+        }
+
+        class SaidYes extends MyContext implements IFrame {
+            prompts = function () {
+                return new TemplateResponseModel("hello", "<speak>user said Yes</speak>");
+            };
+            sessionEnded = function () {
+                return new Promise(resolve => {
+                    resolve();
+                });
+            };
+        }
+
+        class SaidUnhandled extends MyContext implements IFrame {
+            prompts = function () {
+                return new TemplateResponseModel("hello", "<speak>user input unhandled</speak>");
+            };
+            sessionEnded = function () {
+                return new Promise(resolve => {
+                    resolve();
+                });
+            };
+        }
+
+        let l = sdk.initialize({reset: true});
+
+        let startContainer = new EventContainer({name: "startNode"}, StartNode, [{name: "answeredYes"}, {name: "answeredNo"}, {name: "unhandled"}]);
+        let saidYesContainer = new EventContainer({name: "answeredYes"}, SaidYes, []);
+        let saidNoContainer = new EventContainer({name: "answeredNo"}, SaidNo, []);
+        let unhandledContainer = new EventContainer({name: "unhandled"}, SaidUnhandled, []);
+
+        l.Register(startContainer);
+        l.Register(saidYesContainer);
+        l.Register(saidNoContainer);
+        l.Register(unhandledContainer);
+
+        l.Actions["AMAZON.YesIntent"] = yesAction;
+        l.Actions["AMAZON.NoIntent"] = noAction;
+
+        let myRequest = JSON.parse(JSON.stringify(AlexaLaunchRequest)) as AlexaRequestBody;
+
+        let yesIntent: IntentRequest = {
+            type: "IntentRequest",
+            intent: {
+                name: "AMAZON.YesIntent",
+                slots: []
+            },
+            requestId: "aRequest",
+            timestamp: new Date().getTime().toString(),
+            locale: "EN_US"
+        };
+
+        let noIntent: IntentRequest = {
+            type: "IntentRequest",
+            intent: {
+                name: "AMAZON.NoIntent",
+                slots: []
+            },
+            requestId: "aRequest",
+            timestamp: new Date().getTime().toString(),
+            locale: "EN_US"
+        };
+
+        let LaunchRequestAdapter = new AlexaRequestAdapter(AlexaLaunchRequest, {name: "startNode"}, l.Actions);
+
+        let frameOptions: IMyContext = {
+            myVal: "mocha",
+            attributes: AlexaLaunchRequest.session.attributes
+        };
+
+        let eventContext = new MyContext({ContextOptions: frameOptions});
+
+        l.HandleEvent(LaunchRequestAdapter, eventContext).then(
+            (responseModel: TemplateResponseModel) => {
+                expect(responseModel.responseFrame.name).eq("startNode");
+                expect(responseModel.responseFrameIndex).eq(0);
+                expect(responseModel.ssml).eq("<speak>say yes or no</speak>");
+
+                myRequest.session.attributes["currentFrame"] = responseModel.responseFrame;
+                myRequest.session.attributes["currentFrameIndex"] = responseModel.responseFrameIndex;
+                myRequest.session.attributes["waitingForTransition"] = true;
+                myRequest.request = yesIntent;
+
+                frameOptions.attributes = myRequest.session.attributes;
+
+                eventContext = new MyContext({ContextOptions: frameOptions});
+
+                let YesRequestAdapter = new AlexaRequestAdapter(myRequest, {name: "startNode"}, l.Actions);
+                l.HandleEvent(YesRequestAdapter, eventContext).then(
+                    (responseModel: TemplateResponseModel) => {
+                        expect(responseModel.responseFrame.name).eq("answeredYes");
+                        expect(responseModel.responseFrameIndex).eq(0);
+                        expect(responseModel.ssml).eq("<speak>user said Yes</speak>");
+                        done();
+                    },
+                    (error: Error) => {
+                        done(error);
+                    });
+            },
+            (error: Error) => {
+                done(error);
+            }).catch(
+            (error: Error) => {
+                done(error);
+            });
     });
 });
 

@@ -27,19 +27,19 @@ namespace AlexaClasses {
      * Transforms an Alexa request body into a common format for Larynx
      */
     export class AlexaRequestAdapter implements LarynxEventHandler {
-        constructor(requestBody: AlexaRequestBody, defaultFrame: Frames) {
+        constructor(requestBody: AlexaRequestBody, defaultFrame: Frames, actions: {[key: string]: Actions}) {
             this.defaultFrame = defaultFrame;
             this.currentFrame = requestBody.session.attributes["currentFrame"] || this.defaultFrame;
             this.currentFrameIndex = requestBody.session.attributes["currentFrameIndex"] || 0;
             this.waitingForTransition = requestBody.session.attributes["waitingForTransition"];
-            this.transform(requestBody);
+            this.transform(requestBody, actions);
         };
 
         /**
          * Tranform the event into common event names and params format
          * @returns {EventAdapter}
          */
-        transform = function (event: AlexaRequestBody) {
+        transform = function (event: AlexaRequestBody, actions: {[key: string]: Actions}) {
             let eventAction: Actions = {
                 name: ""
             };
@@ -49,7 +49,7 @@ namespace AlexaClasses {
                 eventAction.name = "LaunchRequest";
             } else if (eventType === RequestType.IntentRequest) {
                 let eventRequest = event.request as IntentRequest;
-                eventAction.name = eventRequest.intent.name;
+                eventAction = actions[eventRequest.intent.name];
                 eventParams = eventRequest.intent.slots;
             } else {
                 let eventRequest = event.request as SessionEndedRequest;
@@ -60,7 +60,8 @@ namespace AlexaClasses {
                 };
             }
 
-            return new EventAdapter(eventAction, eventParams);
+            this.event = new EventAdapter(eventAction, eventParams);
+            return this.event;
         };
         currentFrame: Frames;
         currentFrameIndex: number;

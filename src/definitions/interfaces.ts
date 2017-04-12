@@ -17,8 +17,8 @@ namespace LarynxInterfaces {
         currentFrame: Frames;
         currentFrameIndex: number;
         defaultFrame: Frames;
-        transform: (event: RequestBody) => LarynxEvent |
-            ((event: RequestBody) => Promise<LarynxEvent>);
+        transform: (event: RequestBody, actions: {[key: string]: Actions}) => LarynxEvent |
+            ((event: RequestBody, actions: {[key: string]: Actions}) => Promise<LarynxEvent>);
         event: LarynxEvent;
         waitingForTransition: boolean;
     }

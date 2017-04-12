@@ -24,7 +24,7 @@ let _instance: any = undefined;
 
 function props(options: any) {
     let _larynxFrames: {[key: string]: Array<IEventContainer>} = {};
-    let _larynxActions: {[key: string]: Actions} = {};
+    let _larynxActions: {[key: string]: Actions | undefined} = {};
 
     return {
         Frames: _larynxFrames,
@@ -53,7 +53,7 @@ function props(options: any) {
                 if (!actionHandlers.actions) {
                     newFrame = await resolveAction.call(this, actionHandlers.unhandled);
                 } else {
-                    newFrame = await getAction.call(this, actionHandlers.actions);
+                    newFrame = await getAction.call(this, actionHandlers.actions, eventHandler.event.name.name);
                 }
                 let newFrames = _larynxFrames[newFrame.name];
                 frameIndex = Math.floor(Math.random() * newFrames.length);
@@ -116,9 +116,10 @@ async function getResponseModel(prompts: ActionResponseModel  | (() => Promise<A
     }
 }
 
-async function getAction(actions: NamedAction | Array<NamedAction>) {
+async function getAction(actions: NamedAction | Array<NamedAction>, actionName: string) {
     if (actions instanceof Array) {
-        let action = actions[Math.floor(Math.random() * actions.length)];
+        let validActions = actions.filter((val) => { return val.action.name === actionName; });
+        let action = validActions[Math.floor(Math.random() * validActions.length)];
         return resolveAction.call(this, action);
     } else {
         return resolveAction.call(this, actions); // TODO: await here?
@@ -127,8 +128,8 @@ async function getAction(actions: NamedAction | Array<NamedAction>) {
 
 async function resolveAction(action: () => Frames | Frames | (() => Promise<Frames>)): Promise<Frames> {
     try {
-        if (instanceOfGenericAction(action()) || instanceOfNamedAction(action)) {
-            return action;
+        if (instanceOfGenericAction(action) || instanceOfNamedAction(action)) {
+            return action.handler();
         } else if (isPromise(action)) {
             return await action.call(this);
         } else if (isFunction(action)) {
