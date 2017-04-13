@@ -22,7 +22,15 @@ let parser = require("xml2json");
 let _redirectLimit = 10;
 let _instance: any = undefined;
 
-function props(options: any) {
+export class LarynxInstance {
+    Frames: {[key: string]: Array<IEventContainer>};
+    Actions: {[key: string]: Actions | undefined};
+    Register: (frame: IEventContainer) => void;
+    Render: (template: string, model: ActionResponseModel) => string;
+    HandleEvent: (eventHandler: LarynxEventHandler, options: ISessionContext) => Promise<ActionResponseModel>;
+}
+
+function props(options: any): LarynxInstance {
     let _larynxFrames: {[key: string]: Array<IEventContainer>} = {};
     let _larynxActions: {[key: string]: Actions | undefined} = {};
 
@@ -101,7 +109,7 @@ function props(options: any) {
         responseModel.responseFrame = frameId;
         responseModel.responseFrameIndex = frameIndex;
         responseModel.endsSession = !!frameImpl.transitions;
-        return responseModel;
+        return Object.assign(frameImpl, responseModel);
     }
 }
 
@@ -182,8 +190,7 @@ async function checkForRedirect(frame: IFrame): Promise<FrameRedirectResponse> {
     }
 }
 
-
-export function initialize(options: any): any {
+export function initialize(options: any): LarynxInstance {
     if (!_instance || options.reset) {
         _instance = props(options);
     }

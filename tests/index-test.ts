@@ -481,6 +481,12 @@ describe("obj", () => {
         };
 
         class StartNode extends MyContext implements IFrame {
+            pre = function () {
+                return new Promise(resolve => {
+                    this.myVal = "overwritten";
+                    resolve(new RedirectResponse(false));
+                });
+            };
             prompts = function () {
                 return new TemplateResponseModel("hello", "<speak>say yes or no</speak>");
             };
@@ -573,12 +579,14 @@ describe("obj", () => {
 
         let eventContext = new MyContext({ContextOptions: frameOptions});
 
+        interface MyResponseModel extends TemplateResponseModel, MyContext {}
+
         l.HandleEvent(LaunchRequestAdapter, eventContext).then(
-            (responseModel: TemplateResponseModel) => {
+            (responseModel: MyResponseModel) => {
                 expect(responseModel.responseFrame.name).eq("startNode");
                 expect(responseModel.responseFrameIndex).eq(0);
                 expect(responseModel.ssml).eq("<speak>say yes or no</speak>");
-
+                expect(responseModel.myVal).eq("overwritten");
                 myRequest.session.attributes["currentFrame"] = responseModel.responseFrame;
                 myRequest.session.attributes["currentFrameIndex"] = responseModel.responseFrameIndex;
                 myRequest.session.attributes["waitingForTransition"] = true;
