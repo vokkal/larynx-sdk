@@ -615,7 +615,6 @@ describe("obj", () => {
 
                         l.HandleEvent(unhandledRequestAdapter, eventContext).then(
                             (responseModel: TemplateResponseModel) => {
-                                console.log(JSON.stringify(responseModel));
                                 expect(responseModel.responseFrame.name).eq("unhandled");
                                 expect(responseModel.responseFrameIndex).eq(0);
                                 expect(responseModel.ssml).eq("<speak>user input unhandled</speak>");
