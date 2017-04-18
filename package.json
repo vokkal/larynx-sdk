@@ -1,6 +1,6 @@
 {
   "name": "larynx-sdk",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "scripts": {
     "test": "npm run build_tests && npm run execute_tests",
     "execute_tests": "tslint -c tslint.json 'tests/**/*.ts' && mocha --require source-map-support/register --opts tests/mocha.opts build/tests/**/*-test.js",
@@ -15,6 +15,10 @@
   "files": [
     "dist/**/*"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vokkal/larynx-sdk"
+  },
   "devDependencies": {
     "@types/chai": "^3.4.35",
     "@types/mocha": "^2.2.40",
