@@ -448,9 +448,7 @@ describe("obj", () => {
         };
 
         let unhandledAction: GenericAction = {
-            handler: () => {
-                return unhandledFrame;
-            }
+            handler: unhandledFrame
         };
 
         let yesAction: Actions = {
@@ -513,6 +511,7 @@ describe("obj", () => {
             prompts = function () {
                 return new TemplateResponseModel("hello", "<speak>user said Yes</speak>");
             };
+            transitions = actionHandlers;
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();
@@ -559,10 +558,10 @@ describe("obj", () => {
             locale: "EN_US"
         };
 
-        let noIntent: IntentRequest = {
+        let unhandledIntent: IntentRequest = {
             type: "IntentRequest",
             intent: {
-                name: "AMAZON.NoIntent",
+                name: "Unknown!!",
                 slots: []
             },
             requestId: "aRequest",
@@ -602,7 +601,29 @@ describe("obj", () => {
                         expect(responseModel.responseFrame.name).eq("answeredYes");
                         expect(responseModel.responseFrameIndex).eq(0);
                         expect(responseModel.ssml).eq("<speak>user said Yes</speak>");
-                        done();
+
+                        myRequest.session.attributes["currentFrame"] = responseModel.responseFrame;
+                        myRequest.session.attributes["currentFrameIndex"] = responseModel.responseFrameIndex;
+                        myRequest.session.attributes["waitingForTransition"] = true;
+                        myRequest.request = unhandledIntent;
+
+                        frameOptions.attributes = myRequest.session.attributes;
+
+                        eventContext = new MyContext({ContextOptions: frameOptions});
+
+                        let unhandledRequestAdapter = new AlexaRequestAdapter(myRequest, {name: "startNode"}, l.Actions);
+
+                        l.HandleEvent(unhandledRequestAdapter, eventContext).then(
+                            (responseModel: TemplateResponseModel) => {
+                                console.log(JSON.stringify(responseModel));
+                                expect(responseModel.responseFrame.name).eq("unhandled");
+                                expect(responseModel.responseFrameIndex).eq(0);
+                                expect(responseModel.ssml).eq("<speak>user input unhandled</speak>");
+                                done();
+                            }).catch(
+                            (error: Error) => {
+                                done(error);
+                            });
                     },
                     (error: Error) => {
                         done(error);

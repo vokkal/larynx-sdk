@@ -35,14 +35,14 @@ namespace LarynxInterfaces {
 
     export interface NamedAction {
         action: Actions;
-        handler: () => Frames |
-            Frames |
+        handler: (() => Frames) |
+            (Frames) |
             (() => Promise<Frames>);
     }
 
     export interface GenericAction {
-        handler: () => Frames |
-            Frames |
+        handler: (() => Frames) |
+            (Frames) |
             (() => Promise<Frames>);
     }
 

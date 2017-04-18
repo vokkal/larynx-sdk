@@ -58,8 +58,8 @@ function props(options: any): LarynxInstance {
             if (eventHandler.waitingForTransition && !!frameImpl.transitions) {
                 let actionHandlers = frameImpl.transitions;
                 let newFrame: Frames;
-                if (!actionHandlers.actions) {
-                    newFrame = await resolveAction.call(this, actionHandlers.unhandled);
+                if (!actionHandlers.actions || !eventHandler.event.name) {
+                    newFrame = await resolveAction.call(this, actionHandlers.unhandled.handler);
                 } else {
                     newFrame = await getAction.call(this, actionHandlers.actions, eventHandler.event.name.name);
                 }
@@ -134,14 +134,16 @@ async function getAction(actions: NamedAction | Array<NamedAction>, actionName: 
     }
 }
 
-async function resolveAction(action: () => Frames | Frames | (() => Promise<Frames>)): Promise<Frames> {
+async function resolveAction(action: (() => Frames) | (Frames) | (() => Promise<Frames>)): Promise<Frames> {
     try {
-        if (instanceOfGenericAction(action) || instanceOfNamedAction(action)) {
-            return action.handler();
+        if (instanceOfFrames(action)) {
+            return action as Frames;
+        } else if (instanceOfGenericAction(action) || instanceOfNamedAction(action)) {
+            return ((action as GenericAction).handler as () => Frames)();
         } else if (isPromise(action)) {
-            return await action.call(this);
+            return await (action as () => Promise<Frames>).call(this);
         } else if (isFunction(action)) {
-            return action.call(this);
+            return (action as () => Frames).call(this);
         }
     } catch (err) {
         throw new Error("Error resolving action! " + err);
@@ -160,6 +162,10 @@ async function resolvePrompt(prompt: ActionResponseModel  | (() => Promise<Actio
     } catch (err) {
         throw new Error("Error resolving prompt! " + err);
     }
+}
+
+function instanceOfFrames(object: any): object is Frames {
+    return "name" in object;
 }
 
 function instanceOfActionResponseModel(object: any): object is ActionResponseModel {
