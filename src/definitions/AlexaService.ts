@@ -336,7 +336,7 @@ namespace AlexaService {
          * "Simple": A card that contains a title and plain text content.
          * "Standard": A card that contains a title, text content, and an image to display.
          * "LinkAccount": a card that displays a link to an authorization URL that the user can use to link their Alexa account with a user in another system. See Linking an Alexa User with a User in Your System for details. */
-            type: CardType;
+        type: CardType;
         /**A string containing the title of the card. (not applicable for cards of type LinkAccount). */
         title?: string;
         /**A string containing the contents of a Simple card (not applicable for cards of type Standard or LinkAccount).
