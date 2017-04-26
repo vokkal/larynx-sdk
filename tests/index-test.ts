@@ -367,6 +367,9 @@ describe("obj", () => {
                     resolve(new RedirectResponse(true, "BFrame"));
                 });
             };
+            prompts = function () {
+                return new TemplateResponseModel("hello world", "<speak>Hello, " + this.stuff + "!</speak>");
+            };
             sessionEnded = function () {
                 return new Promise(resolve => {
                     resolve();

@@ -55,7 +55,8 @@ function props(options: any): LarynxInstance {
             let frameContainer = frameArr[frameIndex ? frameIndex : (Math.floor(Math.random() * frameArr.length))];
             let frameImpl = new frameContainer.impl({ContextOptions: options});
 
-            if (eventHandler.waitingForTransition && !!frameImpl.transitions) {
+            if ((eventHandler.waitingForTransition && !!frameImpl.transitions) ||
+                (!eventHandler.waitingForTransition && !frameImpl.prompts) ) {
                 let actionHandlers = frameImpl.transitions;
                 let newFrame: Frames;
                 if (!actionHandlers.actions || !eventHandler.event.name) {
