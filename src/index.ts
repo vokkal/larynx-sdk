@@ -59,9 +59,19 @@ function props(options: any): LarynxInstance {
                 let actionHandlers = frameImpl.transitions;
                 let newFrame: Frames;
                 if (!actionHandlers.actions || !eventHandler.event.name) {
-                    newFrame = await resolveAction.call(this, actionHandlers.unhandled.handler);
+                    try {
+                        newFrame = await resolveAction.call(this, actionHandlers.unhandled.handler);
+                    } catch (error) {
+                        console.log("Error resolving action: " + error);
+                        throw error;
+                    }
                 } else {
-                    newFrame = await getAction.call(this, actionHandlers.actions, eventHandler.event.name.name);
+                    try {
+                        newFrame = await getAction.call(this, actionHandlers.actions, eventHandler.event.name.name);
+                    } catch (error) {
+                        console.log("Error getting action: " + error);
+                        throw error;
+                    }
                 }
                 let newFrames = _larynxFrames[newFrame.name];
                 frameIndex = Math.floor(Math.random() * newFrames.length);
@@ -73,18 +83,28 @@ function props(options: any): LarynxInstance {
                 throw new Error(`Expecting prompts but none defined in frame: ${frameId.name}!`);
             }
 
-            return await getActionResponse(eventHandler, options, frameImpl, frameIndex, frameId);
+            try {
+                return await getActionResponse(eventHandler, options, frameImpl, frameIndex, frameId);
+            } catch (error) {
+                console.log("Error getting action response: " + error);
+                throw error;
+            }
         }
     };
 
     async function getActionResponse(eventHandler: LarynxEventHandler, options: ISessionContext, frameImpl: IFrame, frameIndex: number, frameId: Frames) {
         let redirect = true;
         let count = 0;
-        let response = new RedirectResponse(false);
+        let response: FrameRedirectResponse = new RedirectResponse(false);
 
         let redirectPath = eventHandler.currentFrame.name;
         while (redirect) {
-            let response = await checkForRedirect.call(frameImpl, frameImpl);
+            try {
+                response = await checkForRedirect.call(frameImpl, frameImpl);
+            } catch (error) {
+                console.log("Error checking redirect: " + error);
+                throw error;
+            }
 
             if (response.err) {
                 console.log(`Redirect error: ${response.err}, ${response.err.message}`);
@@ -105,11 +125,16 @@ function props(options: any): LarynxInstance {
             }
         }
 
-        let responseModel = await getResponseModel.call(frameImpl, frameImpl.prompts);
-        responseModel.responseFrame = frameId;
-        responseModel.responseFrameIndex = frameIndex;
-        responseModel.endsSession = !!frameImpl.transitions;
-        return Object.assign(frameImpl, responseModel);
+        try {
+            let responseModel = await getResponseModel.call(frameImpl, frameImpl.prompts);
+            responseModel.responseFrame = frameId;
+            responseModel.responseFrameIndex = frameIndex;
+            responseModel.endsSession = !!frameImpl.transitions;
+            return Object.assign(frameImpl, responseModel);
+        } catch (error) {
+            console.log("Error getting response model:  " + error);
+            throw error;
+        }
     }
 }
 
@@ -125,12 +150,19 @@ async function getResponseModel(prompts: ActionResponseModel  | (() => Promise<A
 }
 
 async function getAction(actions: NamedAction | Array<NamedAction>, actionName: string) {
-    if (actions instanceof Array) {
-        let validActions = actions.filter((val) => { return val.action.name === actionName; });
-        let action = validActions[Math.floor(Math.random() * validActions.length)];
-        return resolveAction.call(this, action);
-    } else {
-        return resolveAction.call(this, actions); // TODO: await here?
+    try {
+        if (actions instanceof Array) {
+            let validActions = actions.filter((val) => {
+                return val.action.name === actionName;
+            });
+            let action = validActions[Math.floor(Math.random() * validActions.length)];
+            return resolveAction.call(this, action);
+        } else {
+            return resolveAction.call(this, actions); // TODO: await here?
+        }
+    } catch (error) {
+        console.log("Error in getAction: " + error);
+        throw error;
     }
 }
 
