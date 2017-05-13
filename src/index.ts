@@ -130,7 +130,7 @@ function props(options: any): LarynxInstance {
             let responseModel = await getResponseModel.call(frameImpl, frameImpl.prompts);
             responseModel.responseFrame = frameId;
             responseModel.responseFrameIndex = frameIndex;
-            responseModel.endsSession = !!frameImpl.transitions;
+            responseModel.endsSession = !frameImpl.transitions;
             return Object.assign(frameImpl, responseModel);
         } catch (error) {
             console.log("Error getting response model:  " + error);
