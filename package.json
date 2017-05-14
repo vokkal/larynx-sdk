@@ -1,6 +1,6 @@
 {
   "name": "larynx-sdk",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "scripts": {
     "test": "npm run build_tests && npm run execute_tests",
     "execute_tests": "tslint -c tslint.json 'tests/**/*.ts' && mocha --require source-map-support/register --opts tests/mocha.opts build/tests/**/*-test.js",
