@@ -159,7 +159,7 @@ async function getAction(actions: NamedAction | Array<NamedAction>, actionName: 
             let action = validActions[Math.floor(Math.random() * validActions.length)];
             return resolveAction.call(this, action);
         } else {
-            return resolveAction.call(this, actions); // TODO: await here?
+            return resolveAction.call(this, actions.handler); // TODO: await here?
         }
     } catch (error) {
         console.log("Error in getAction: " + error);
