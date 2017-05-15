@@ -464,9 +464,7 @@ describe("obj", () => {
 
         let yesHandler: NamedAction = {
             action: yesAction,
-            handler: () => {
-                return answeredYesFrame;
-            }
+            handler: answeredYesFrame
         };
 
         let noHandler: NamedAction = {
